@@ -1,0 +1,1345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StyleMod Outfit Builder</title>
+<meta name="description" content="Concept mockup: a short quiz that generates outfit recommendations from a customer's stated preferences.">
+<style>
+  :root {
+    color-scheme: light;
+    --on-ink: #fff;
+    --on-accent: #fff;
+    --soft-ink: #4d4238;
+    --hover: #fff;
+    --lay: #efe7da;
+    --swatch-line: rgba(33, 28, 24, .25);
+    --bg: #f7f2ea;
+    --surface: #fffdf9;
+    --sunken: #efe7da;
+    --ink: #211c18;
+    --muted: #5c534a;
+    --line: #d9cfc0;
+    --line-strong: #85796b;
+    --accent: #9a3412;
+    --accent-dark: #7c2a0e;
+    --accent-soft: #f6e4d8;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #1a1714; --surface: #24201c; --sunken: #2e2924; --ink: #f4eee5; --muted: #bdb2a4;
+      --line: #40392f; --line-strong: #8f8475; --accent: #f0a27c; --accent-dark: #f8c3a7; --accent-soft: #40281c;
+      --on-ink: #1a1714; --on-accent: #2a1309; --soft-ink: #e6d8ca; --hover: #2e2924; --swatch-line: rgba(244, 238, 229, .35);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #1a1714; --surface: #24201c; --sunken: #2e2924; --ink: #f4eee5; --muted: #bdb2a4;
+      --line: #40392f; --line-strong: #8f8475; --accent: #f0a27c; --accent-dark: #f8c3a7; --accent-soft: #40281c;
+      --on-ink: #1a1714; --on-accent: #2a1309; --soft-ink: #e6d8ca; --hover: #2e2924; --swatch-line: rgba(244, 238, 229, .35);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 400 1rem/1.55 var(--sans);
+  }
+  h1, h2, h3, h4 { font-family: var(--serif); font-weight: 500; line-height: 1.2; margin: 0; text-wrap: balance; }
+  p { margin: 0; }
+  button, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  h1:focus, h2:focus { outline: none; }
+
+  .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .skip { position: absolute; left: 16px; top: -60px; background: var(--ink); color: var(--on-ink); padding: 10px 14px; border-radius: 6px; z-index: 20; }
+  .skip:focus { top: 8px; }
+
+  .site-head { border-bottom: 1px solid var(--line); background: var(--bg); }
+  .site-head-in, .site-foot-in { max-width: 1080px; margin: 0 auto; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .brand { font-family: var(--serif); font-size: 1.3rem; letter-spacing: .01em; }
+  .brand b { font-weight: 500; color: var(--accent); }
+  .tag { font-size: .8rem; color: var(--muted); text-align: right; }
+  .site-foot { border-top: 1px solid var(--line); margin-top: 48px; color: var(--muted); font-size: .85rem; }
+
+  main { padding: 0 16px; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 28px 0 16px; }
+  .wrap-wide { max-width: 1080px; }
+  .fade { animation: fade .28s ease-out both; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .eyebrow { font-size: .78rem; letter-spacing: .09em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .lede { color: var(--muted); margin-top: 8px; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-height: 44px; padding: 9px 18px; border-radius: 999px;
+    border: 1px solid var(--line-strong); background: transparent; color: var(--ink);
+    cursor: pointer; transition: background .15s, border-color .15s, color .15s;
+  }
+  .btn:hover { background: var(--sunken); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+  .btn.primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+  .btn.small { min-height: 36px; padding: 5px 13px; font-size: .875rem; }
+  .btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-dark); }
+  .link { background: none; border: 0; padding: 2px 0; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; min-height: 24px; }
+  .link:hover { color: var(--accent-dark); }
+
+  /* Quiz chrome */
+  .progress-row { display: flex; justify-content: space-between; align-items: baseline; font-size: .875rem; color: var(--muted); margin-bottom: 8px; }
+  .progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-bottom: 28px; }
+  .progress i { display: block; height: 100%; background: var(--accent); transition: width .3s ease; }
+  .q-title { font-size: clamp(1.7rem, 5.5vw, 2.25rem); }
+  .section { margin-top: 28px; border: 0; padding: 0; min-width: 0; }
+  .section > legend, .section-title { font-weight: 600; padding: 0; margin-bottom: 4px; display: block; }
+  .hint { font-size: .9rem; color: var(--muted); margin-bottom: 10px; }
+  .nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 32px; }
+
+  /* Option cards: native inputs styled through the sibling span */
+  .opts { display: grid; gap: 10px; margin-top: 10px; }
+  .opts.two { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
+  .opts.three { grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); }
+  .opt { position: relative; display: block; cursor: pointer; }
+  .opt input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .opt-body {
+    display: block; height: 100%; min-height: 48px; padding: 11px 14px 11px 42px; position: relative;
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius);
+    transition: border-color .15s, background .15s;
+  }
+  .opt-body::before {
+    content: ""; position: absolute; left: 14px; top: 14px; width: 18px; height: 18px;
+    border: 1.5px solid var(--line-strong); border-radius: 4px; background: var(--surface);
+  }
+  .opt input[type="radio"] + .opt-body::before { border-radius: 50%; }
+  .opt:hover .opt-body { background: var(--hover); border-color: var(--ink); }
+  .opt input:checked + .opt-body { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-soft); }
+  .opt input:checked + .opt-body::before { background: var(--accent); border-color: var(--accent); box-shadow: inset 0 0 0 3px var(--surface); }
+  .opt input:focus-visible + .opt-body { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .opt small { display: block; color: var(--muted); font-size: .875rem; line-height: 1.4; }
+  .opt input:checked + .opt-body small { color: var(--soft-ink); }
+
+  .swatches { display: flex; gap: 4px; margin-top: 8px; }
+  .swatches i { flex: 1; height: 26px; border-radius: 4px; border: 1px solid var(--swatch-line); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip { position: relative; }
+  .chip input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .chip span {
+    display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 6px 12px 6px 8px;
+    border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); font-size: .9rem;
+  }
+  .chip i { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--swatch-line); }
+  .chip input:checked + span { background: var(--ink); border-color: var(--ink); color: var(--on-ink); text-decoration: line-through; }
+  .chip input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .note { margin-top: 12px; padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--sunken); font-size: .925rem; }
+
+  /* Budget */
+  .budget-value { font-family: var(--serif); font-size: 1.75rem; }
+  .range { position: relative; height: 44px; margin-top: 6px; }
+  .range::before { content: ""; position: absolute; left: 0; right: 0; top: 20px; height: 4px; background: var(--line); border-radius: 2px; }
+  .range-fill { position: absolute; top: 20px; height: 4px; background: var(--accent); }
+  .range input { position: absolute; left: 0; top: 0; width: 100%; height: 44px; margin: 0; background: none; pointer-events: none; -webkit-appearance: none; appearance: none; }
+  .range input::-webkit-slider-runnable-track { background: none; }
+  .range input::-moz-range-track { background: none; }
+  .range input::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto; width: 26px; height: 26px; border-radius: 50%; background: var(--surface); border: 3px solid var(--accent); cursor: grab; }
+  .range input::-moz-range-thumb { pointer-events: auto; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); border: 3px solid var(--accent); cursor: grab; }
+  .range-ends { display: flex; justify-content: space-between; font-size: .85rem; color: var(--muted); }
+
+  .switch { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .switch small { display: block; color: var(--muted); font-size: .875rem; }
+  .switch input { -webkit-appearance: none; appearance: none; flex: none; width: 46px; height: 26px; margin: 0; border-radius: 13px; background: var(--line-strong); position: relative; cursor: pointer; transition: background .15s; }
+  .switch input::after { content: ""; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); transition: transform .15s; }
+  .switch input:checked { background: var(--accent); }
+  .switch input:checked::after { transform: translateX(20px); }
+
+  /* Review */
+  .review { margin: 20px 0 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+  .review > div { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .review > div:last-child { border-bottom: 0; }
+  .review dt { font-size: .85rem; color: var(--muted); grid-column: 1; }
+  .review dd { margin: 0; grid-column: 1; }
+  .review .link { grid-column: 2; grid-row: 1 / 3; align-self: center; }
+  .consent { display: flex; gap: 12px; align-items: flex-start; margin-top: 20px; padding: 14px 16px; background: var(--accent-soft); border-radius: var(--radius); cursor: pointer; font-weight: 600; }
+  .consent input { width: 22px; height: 22px; margin: 1px 0 0; flex: none; accent-color: var(--accent); }
+  .consent small { display: block; font-weight: 400; color: var(--soft-ink); }
+
+  /* Trust panel */
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; font-size: .925rem; }
+  .panel h2, .panel h3 { font-size: 1.05rem; margin-bottom: 4px; }
+  .panel details { margin-top: 8px; }
+  summary { cursor: pointer; color: var(--accent); min-height: 28px; }
+  .intro-panel { margin-top: 28px; }
+  .intro-title { font-size: clamp(2.2rem, 8vw, 3.4rem); margin-top: 10px; }
+  .intro-steps { margin: 24px 0 28px; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+  .intro-steps li { padding: 10px 0; border-bottom: 1px solid var(--line); display: flex; gap: 14px; }
+  .intro-steps b { font-family: var(--serif); font-weight: 500; color: var(--accent); }
+
+  /* Results */
+  .results-head { display: grid; gap: 16px; }
+  .results-title { font-size: clamp(1.9rem, 5vw, 2.6rem); }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .human { font-size: .925rem; margin-top: 12px; }
+  .banner { margin-top: 16px; padding: 12px 16px; border-radius: var(--radius); background: var(--ink); color: var(--on-ink); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+  .log { margin-top: 12px; font-size: .925rem; }
+  .log ul { margin: 4px 0 0; padding-left: 20px; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-top: 24px; scroll-margin-top: 16px; }
+  .card-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+  .card-title { font-size: 1.5rem; margin-top: 2px; }
+  .total { font-family: var(--serif); font-size: 1.3rem; white-space: nowrap; }
+  .card-grid { display: grid; gap: 18px; }
+  .lay { background: var(--lay); border-radius: var(--radius); padding: 10px; }
+  .lay svg { display: block; width: 100%; max-width: 330px; height: auto; margin: 0 auto; }
+  .strip { display: flex; height: 34px; border-radius: 6px; overflow: hidden; margin-top: 14px; border: 1px solid var(--swatch-line); }
+  .strip i { flex: 1; }
+  .strip-key { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: .85rem; color: var(--muted); margin-top: 6px; }
+  .strip-why { font-size: .9rem; margin-top: 4px; }
+
+  .items { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .items li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .slot { font-size: .75rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+  .item-name { font-weight: 600; }
+  .item-meta { font-size: .875rem; color: var(--muted); }
+  .why { margin-top: 16px; padding: 14px 16px; background: var(--accent-soft); border-radius: var(--radius); }
+  .why h4 { font-size: 1.1rem; margin-bottom: 4px; }
+  .why p + p { margin-top: 8px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .fb { margin-top: 12px; padding: 14px; border: 1px solid var(--line-strong); border-radius: var(--radius); }
+  .fb-title { font-weight: 600; margin-bottom: 8px; }
+  .fb-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .sub { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .sub h4 { font-size: 1.1rem; margin-bottom: 6px; }
+  .sub summary h4 { display: inline; color: var(--ink); }
+  .sub p + p { margin-top: 8px; }
+  .brands { display: grid; gap: 12px; margin-top: 10px; }
+  .brand-item h5 { margin: 0 0 4px; font-family: var(--sans); font-size: .9rem; font-weight: 600; }
+  .brand-row { display: grid; grid-template-columns: 78px 1fr; gap: 8px; font-size: .9rem; padding: 3px 6px; border-radius: 4px; }
+  .brand-row.match { background: var(--accent-soft); }
+  .brand-row span:first-child { color: var(--muted); }
+  .brand-row.match span:first-child { color: var(--soft-ink); font-weight: 600; }
+  .fine { font-size: .85rem; color: var(--muted); margin-top: 10px; }
+
+  .saved { margin-top: 32px; }
+  .saved h2 { font-size: 1.5rem; }
+  .saved ul { list-style: none; margin: 10px 0 0; padding: 0; }
+  .saved li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .saved p { font-size: .925rem; color: var(--muted); }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 16px); max-width: calc(100vw - 32px); width: max-content;
+    background: var(--ink); color: var(--on-ink); padding: 10px 16px; border-radius: 8px; font-size: .925rem;
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 30;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  dialog { border: 0; border-radius: 14px; padding: 22px; max-width: min(420px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); }
+  dialog::backdrop { background: rgba(33, 28, 24, .5); }
+  dialog h2 { font-size: 1.4rem; margin-bottom: 6px; }
+  dialog .nav { margin-top: 18px; justify-content: flex-end; }
+
+  .head-right { display: flex; align-items: center; gap: 12px; }
+  .suggested { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 24px; }
+  .match-note { display: inline-block; margin-top: 6px; font-size: .875rem; color: var(--soft-ink); }
+  .match-note b { color: var(--accent); }
+  @media (max-width: 479px) {
+    .tag { display: none; }
+    .brand { font-size: 1.1rem; white-space: nowrap; }
+  }
+  @media (min-width: 640px) {
+    .card { padding: 22px; }
+    .brands { grid-template-columns: 1fr 1fr; }
+  }
+  @media (min-width: 880px) {
+    .results-head { grid-template-columns: 1.3fr 1fr; align-items: start; gap: 32px; }
+    .card-grid { grid-template-columns: minmax(280px, 340px) 1fr; gap: 28px; }
+    .brands { grid-template-columns: repeat(4, 1fr); }
+    .brand-row { grid-template-columns: 1fr; gap: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#app">Skip to content</a>
+<header class="site-head">
+  <div class="site-head-in">
+    <div class="brand">Style<b>Mod</b> Outfit Builder</div>
+    <div class="head-right">
+      <div class="tag">Concept mockup, placeholder data</div>
+      <button class="btn small" id="themeBtn" data-action="theme">Dark mode</button>
+    </div>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer class="site-foot">
+  <div class="site-foot-in">
+    <p>Theoretical product for a marketing case study on responsible Gen AI personalization. Everything runs in this browser tab and disappears when you close it. Brand names are illustrative mock data, with no affiliation or endorsement.</p>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<dialog id="clearDialog" aria-labelledby="clearTitle">
+  <h2 id="clearTitle">Clear my data?</h2>
+  <p>This removes your answers, saved outfits and feedback from this session and returns you to the start.</p>
+  <div class="nav">
+    <button class="btn" data-action="clear-cancel">Keep my data</button>
+    <button class="btn primary" data-action="clear-confirm">Clear my data</button>
+  </div>
+</dialog>
+
+<script>
+"use strict";
+
+/* ==========================================================================
+   MOCK DATA
+   Everything below is placeholder data. In production, STYLES would be the
+   retailer's product catalog, served from an API.
+   ========================================================================== */
+
+const COLORS = {
+  black:   { label: "Black",   hex: "#1f1f21", family: "neutral" },
+  white:   { label: "White",   hex: "#f8f6f1", family: "neutral" },
+  grey:    { label: "Grey",    hex: "#9b9c9e", family: "neutral" },
+  beige:   { label: "Beige",   hex: "#d9c8ad", family: "neutral" },
+  olive:   { label: "Olive",   hex: "#5f6336", family: "earth" },
+  rust:    { label: "Rust",    hex: "#a64b24", family: "earth" },
+  camel:   { label: "Camel",   hex: "#b98a4f", family: "earth" },
+  navy:    { label: "Navy",    hex: "#1f2d4d", family: "cool" },
+  slate:   { label: "Slate",   hex: "#566675", family: "cool" },
+  sage:    { label: "Sage",    hex: "#9caf97", family: "cool" },
+  red:     { label: "Red",     hex: "#c8242f", family: "bold" },
+  cobalt:  { label: "Cobalt",  hex: "#1e4fc2", family: "bold" },
+  mustard: { label: "Mustard", hex: "#d7a11d", family: "bold" }
+};
+
+const PALETTES = {
+  neutral: { label: "Neutrals",    colors: ["black", "white", "grey", "beige"] },
+  earth:   { label: "Earth tones", colors: ["olive", "rust", "camel"] },
+  cool:    { label: "Cool tones",  colors: ["navy", "slate", "sage"] },
+  bold:    { label: "Bold/bright", colors: ["red", "cobalt", "mustard"] }
+};
+
+const OCCASIONS = {
+  casual:     "Everyday casual",
+  work:       "Work / smart casual",
+  night:      "Night out",
+  athleisure: "Athleisure",
+  weekend:    "Weekend / travel"
+};
+
+const DEPTS = { unisex: "Unisex/Mix", menswear: "Menswear", womenswear: "Womenswear" };
+
+const BODY_TYPES = {
+  ectomorph:  { label: "Ectomorph",  desc: "Lean, narrow frame" },
+  mesomorph:  { label: "Mesomorph",  desc: "Athletic, balanced" },
+  endomorph:  { label: "Endomorph",  desc: "Fuller, softer frame" },
+  unsure:     { label: "Not sure / skip", desc: "We'll focus on your silhouette goal" },
+  declined:   { label: "Prefer not to say", desc: "Nothing about body type is used" }
+};
+
+const FITS = { slim: "Slim", regular: "Regular", relaxed: "Relaxed" };
+
+const SILHOUETTES = {
+  "balanced":  { label: "Balanced", desc: "Similar volume on top and bottom" },
+  "small-top": { label: "Small top / bigger bottom contrast", desc: "Fitted or cropped top with wide-leg, relaxed or cargo bottoms" },
+  "big-top":   { label: "Bigger top / slimmer bottom contrast", desc: "Roomy top with a narrower leg" },
+  "surprise":  { label: "Surprise me", desc: "A different shape in each outfit" }
+};
+
+const PREFS = {
+  sustainable: { label: "Sustainable materials", desc: "Favor organic, recycled or lower-impact fabrics" },
+  durable:     { label: "Made to last",          desc: "Favor sturdy construction and timeless cuts" },
+  trend:       { label: "Trend-forward",         desc: "Favor newer shapes and details" }
+};
+
+const TIERS = { value: "Value", mid: "Mid-range", premium: "Premium" };
+const TIER_MULT = { value: 0.55, mid: 1, premium: 2.4 };
+const SLOTS = { top: "Top", bottom: "Bottom", shoes: "Shoes", layer: "Layer or accessory" };
+
+const ALL = Object.keys(COLORS);
+const SHOE_COLORS = ["black", "white", "grey", "beige", "camel", "rust", "navy", "sage", "red"];
+const LAYER_COLORS = ["black", "grey", "beige", "olive", "rust", "camel", "navy", "slate", "mustard"];
+const BOTH = ["menswear", "womenswear"];
+const M = ["menswear"];
+const W = ["womenswear"];
+const SMALL_TOP = ["small-top", "balanced"];
+const BIG_TOP = ["big-top", "balanced"];
+const EVEN = ["balanced"];
+
+/* Tagged by color (colors), fit, silhouette (sil) and, once expanded below, price tier. */
+const STYLES = [
+  // Tops
+  { id: "crop-tee",   slot: "top", name: "fitted cropped tee", shape: "crop",   fit: "slim", sil: SMALL_TOP, occ: ["casual", "night", "weekend"], dept: W, base: 40, colors: ALL, material: "organic cotton", tags: ["sustainable", "trend"] },
+  { id: "rib-tee",    slot: "top", name: "fitted rib tee", shape: "tee",        fit: "slim", sil: SMALL_TOP, occ: ["casual", "night", "weekend"], dept: BOTH, base: 40, colors: ALL, material: "cotton-modal rib", tags: [] },
+  { id: "rib-tank",   slot: "top", name: "ribbed tank", shape: "tank",          fit: "slim", sil: SMALL_TOP, occ: ["casual", "night", "athleisure"], dept: BOTH, base: 30, colors: ALL, material: "recycled-blend rib", tags: ["sustainable"] },
+  { id: "knit-polo",  slot: "top", name: "fitted knit polo", shape: "tee",      fit: "slim", sil: SMALL_TOP, occ: ["work", "night"], dept: BOTH, base: 65, colors: ALL, material: "fine merino", tags: ["durable"], detail: "collar" },
+  { id: "tech-tee",   slot: "top", name: "performance tee", shape: "tee",       fit: "slim", sil: SMALL_TOP, occ: ["athleisure"], dept: BOTH, base: 45, colors: ALL, material: "recycled polyester", tags: ["sustainable"] },
+  { id: "crew-tee",   slot: "top", name: "classic crew tee", shape: "regtee",   fit: "regular", sil: EVEN, occ: ["casual", "weekend", "athleisure"], dept: BOTH, base: 35, colors: ALL, material: "heavyweight organic cotton", tags: ["sustainable", "durable"] },
+  { id: "oxford",     slot: "top", name: "oxford shirt", shape: "shirt",        fit: "regular", sil: EVEN, occ: ["work", "weekend"], dept: BOTH, base: 70, colors: ALL, material: "cotton oxford cloth", tags: ["durable"], detail: "placket" },
+  { id: "fine-knit",  slot: "top", name: "fine-gauge sweater", shape: "knit",   fit: "regular", sil: EVEN, occ: ["work", "casual"], dept: BOTH, base: 75, colors: ALL, material: "merino wool", tags: ["durable"] },
+  { id: "camp-shirt", slot: "top", name: "camp-collar shirt", shape: "regtee",  fit: "regular", sil: EVEN, occ: ["night", "weekend"], dept: BOTH, base: 60, colors: ALL, material: "TENCEL lyocell", tags: ["sustainable", "trend"], detail: "placket" },
+  { id: "drape-top",  slot: "top", name: "drapey blouse", shape: "shirt",       fit: "regular", sil: EVEN, occ: ["work", "night"], dept: W, base: 65, colors: ALL, material: "satin-finish viscose", tags: [], detail: "placket" },
+  { id: "over-tee",   slot: "top", name: "oversized tee", shape: "overtee",     fit: "relaxed", sil: BIG_TOP, occ: ["casual", "weekend", "night"], dept: BOTH, base: 40, colors: ALL, material: "organic cotton", tags: ["sustainable", "trend"] },
+  { id: "boxy-sweat", slot: "top", name: "boxy sweatshirt", shape: "sweat",     fit: "relaxed", sil: BIG_TOP, occ: ["casual", "athleisure", "weekend"], dept: BOTH, base: 60, colors: ALL, material: "recycled-cotton fleece", tags: ["sustainable", "durable"] },
+  { id: "chunky-knit",slot: "top", name: "chunky knit sweater", shape: "sweat", fit: "relaxed", sil: BIG_TOP, occ: ["casual", "work", "weekend"], dept: BOTH, base: 90, colors: ALL, material: "lambswool", tags: ["durable"] },
+  { id: "big-shirt",  slot: "top", name: "oversized poplin shirt", shape: "bigshirt", fit: "relaxed", sil: BIG_TOP, occ: ["work", "night"], dept: BOTH, base: 65, colors: ALL, material: "organic cotton poplin", tags: ["sustainable", "trend"], detail: "placket" },
+
+  // Bottoms
+  { id: "slim-chino", slot: "bottom", name: "slim chinos", shape: "slim",       fit: "slim", sil: BIG_TOP, occ: ["work", "casual"], dept: BOTH, base: 65, colors: ALL, material: "stretch cotton twill", tags: ["durable"] },
+  { id: "slim-jean",  slot: "bottom", name: "slim jeans", shape: "slim",        fit: "slim", sil: BIG_TOP, occ: ["casual", "night", "weekend"], dept: BOTH, base: 70, colors: ["black", "navy", "slate", "grey"], material: "recycled-cotton denim", tags: ["sustainable", "durable"] },
+  { id: "cig-pant",   slot: "bottom", name: "tailored narrow trousers", shape: "slim", fit: "slim", sil: BIG_TOP, occ: ["work", "night"], dept: BOTH, base: 85, colors: ALL, material: "wool blend", tags: ["durable"] },
+  { id: "tapered-jog",slot: "bottom", name: "tapered joggers", shape: "slim",   fit: "slim", sil: BIG_TOP, occ: ["athleisure", "weekend"], dept: BOTH, base: 55, colors: ALL, material: "recycled-poly knit", tags: ["sustainable"] },
+  { id: "str-jean",   slot: "bottom", name: "straight jeans", shape: "straight",fit: "regular", sil: EVEN, occ: ["casual", "weekend", "night"], dept: BOTH, base: 70, colors: ["black", "navy", "slate", "grey", "white"], material: "organic-cotton denim", tags: ["sustainable", "durable"] },
+  { id: "str-pant",   slot: "bottom", name: "straight trousers", shape: "straight", fit: "regular", sil: EVEN, occ: ["work", "night"], dept: BOTH, base: 80, colors: ALL, material: "wool-blend twill", tags: ["durable"] },
+  { id: "track-pant", slot: "bottom", name: "straight track pants", shape: "straight", fit: "regular", sil: EVEN, occ: ["athleisure", "weekend"], dept: BOTH, base: 55, colors: ALL, material: "recycled nylon", tags: ["sustainable", "trend"] },
+  { id: "midi-skirt", slot: "bottom", name: "midi slip skirt", shape: "skirt",  fit: "regular", sil: EVEN, occ: ["work", "night"], dept: W, base: 65, colors: ALL, material: "satin-finish viscose", tags: ["trend"] },
+  { id: "wide-pant",  slot: "bottom", name: "wide-leg trousers", shape: "wide", fit: "relaxed", sil: SMALL_TOP, occ: ["work", "night", "casual"], dept: BOTH, base: 85, colors: ALL, material: "fluid TENCEL blend", tags: ["sustainable", "trend"] },
+  { id: "cargo",      slot: "bottom", name: "relaxed cargo pants", shape: "cargo", fit: "relaxed", sil: SMALL_TOP, occ: ["casual", "weekend", "night"], dept: BOTH, base: 75, colors: ALL, material: "organic cotton ripstop", tags: ["sustainable", "durable", "trend"] },
+  { id: "wide-jean",  slot: "bottom", name: "wide-leg jeans", shape: "wide",    fit: "relaxed", sil: SMALL_TOP, occ: ["casual", "night", "weekend"], dept: BOTH, base: 75, colors: ["black", "navy", "slate", "white"], material: "rigid cotton denim", tags: ["durable", "trend"] },
+  { id: "wide-sweat", slot: "bottom", name: "wide sweatpants", shape: "wide",   fit: "relaxed", sil: SMALL_TOP, occ: ["athleisure", "weekend"], dept: BOTH, base: 55, colors: ALL, material: "recycled-cotton fleece", tags: ["sustainable"] },
+
+  // Shoes
+  { id: "chunky-snk", slot: "shoes", name: "chunky sneakers", shape: "chunky",  fit: "regular", sil: ["small-top", "balanced", "big-top"], occ: ["casual", "night", "weekend", "athleisure"], dept: BOTH, base: 95, colors: SHOE_COLORS, material: "recycled mesh and leather", tags: ["sustainable", "trend"], note: "add visual weight at the hem with their thicker sole" },
+  { id: "low-snk",    slot: "shoes", name: "low-top sneakers", shape: "sneaker",fit: "regular", sil: ["balanced", "big-top"], occ: ["casual", "weekend", "work"], dept: BOTH, base: 80, colors: SHOE_COLORS, material: "vegetable-tanned leather", tags: ["durable"], note: "keep the line simple with a clean, low profile" },
+  { id: "runner",     slot: "shoes", name: "lightweight runners", shape: "sneaker", fit: "regular", sil: ["balanced", "big-top", "small-top"], occ: ["athleisure", "weekend"], dept: BOTH, base: 90, colors: SHOE_COLORS, material: "recycled knit", tags: ["sustainable"], note: "keep the outfit light and easy to move in" },
+  { id: "loafer",     slot: "shoes", name: "leather loafers", shape: "loafer",  fit: "regular", sil: ["balanced", "big-top", "small-top"], occ: ["work", "night"], dept: BOTH, base: 110, colors: ["black", "camel", "rust", "navy"], material: "full-grain leather", tags: ["durable"], note: "finish the outfit with a low, polished shape" },
+  { id: "chelsea",    slot: "shoes", name: "Chelsea boots", shape: "boot",      fit: "regular", sil: ["balanced", "big-top"], occ: ["work", "night", "weekend"], dept: BOTH, base: 125, colors: ["black", "camel", "rust", "grey"], material: "resoleable leather", tags: ["durable"], note: "give the leg line a clean finish at the ankle" },
+  { id: "strap-heel", slot: "shoes", name: "block-heel sandals", shape: "heel", fit: "regular", sil: ["small-top", "balanced"], occ: ["night", "work"], dept: W, base: 95, colors: ["black", "beige", "camel", "red"], material: "leather", tags: ["trend"], note: "add a little height under the hem" },
+
+  // Layers and accessories
+  { id: "blazer",     slot: "layer", name: "unstructured blazer", shape: "jacket", fit: "regular", sil: EVEN, occ: ["work", "night"], dept: BOTH, base: 130, colors: LAYER_COLORS, material: "linen-wool blend", tags: ["durable"] },
+  { id: "chore",      slot: "layer", name: "chore jacket", shape: "jacket",     fit: "regular", sil: EVEN, occ: ["casual", "weekend"], dept: BOTH, base: 90, colors: LAYER_COLORS, material: "organic cotton canvas", tags: ["sustainable", "durable"] },
+  { id: "track-top",  slot: "layer", name: "zip track jacket", shape: "jacket", fit: "regular", sil: EVEN, occ: ["athleisure", "weekend"], dept: BOTH, base: 70, colors: LAYER_COLORS, material: "recycled polyester", tags: ["sustainable", "trend"] },
+  { id: "crossbody",  slot: "layer", name: "crossbody bag", shape: "bag",       fit: "regular", sil: EVEN, occ: ["casual", "night", "weekend", "work"], dept: BOTH, base: 60, colors: LAYER_COLORS, material: "recycled nylon", tags: ["sustainable", "trend"] },
+  { id: "scarf",      slot: "layer", name: "wool scarf", shape: "scarf",        fit: "regular", sil: EVEN, occ: ["work", "weekend", "casual"], dept: BOTH, base: 40, colors: LAYER_COLORS, material: "recycled wool", tags: ["sustainable", "durable"] },
+  { id: "cap",        slot: "layer", name: "six-panel cap", shape: "cap",       fit: "regular", sil: EVEN, occ: ["athleisure", "casual", "weekend"], dept: BOTH, base: 28, colors: LAYER_COLORS, material: "organic cotton twill", tags: ["sustainable"] }
+];
+
+/* One record per style + color + price tier. */
+const CATALOG = STYLES.flatMap(style => style.colors.flatMap(color => Object.keys(TIERS).map(tier => ({
+  ...style,
+  key: `${style.id}|${color}|${tier}`,
+  color,
+  family: COLORS[color].family,
+  tier,
+  price: Math.round(style.base * TIER_MULT[tier]),
+  tags: tier === "premium" ? [...new Set([...style.tags, "durable"])] : style.tags
+}))));
+const BY_KEY = new Map(CATALOG.map(item => [item.key, item]));
+
+/* Illustrative only: no claims about any brand's real price, stock or materials. */
+const BRANDS = {
+  top:    { value: "Uniqlo, H&M, Old Navy",        mid: "J.Crew, Madewell, Everlane",        premium: "Theory, Sunspel, Vince" },
+  bottom: { value: "Old Navy, Uniqlo, Gap",        mid: "Levi's, Madewell, Banana Republic", premium: "AG, Citizens of Humanity, Theory" },
+  shoes:  { value: "Converse, Vans, Skechers",     mid: "New Balance, Adidas, Dr. Martens",  premium: "Common Projects, Golden Goose, Veja" },
+  layer:  { value: "Uniqlo, Gap, H&M",             mid: "Patagonia, Carhartt WIP, Coach",    premium: "Arc'teryx, Reiss, Longchamp" }
+};
+
+/* ==========================================================================
+   STATE (in memory only: nothing is written to cookies or browser storage)
+   ========================================================================== */
+
+const defaultAnswers = () => ({
+  dept: "unisex", occasions: [], palettes: [], avoid: [],
+  body: "unsure", fit: "regular", silhouette: "surprise",
+  budget: [100, 400], sustainable: false, durable: false, trend: false,
+  consent: true
+});
+const emptyFeedback = () => ({ colors: {}, styles: {}, sils: [], log: [] });
+
+let answers = defaultAnswers();
+let view = "intro";            // "intro" | 1-5 | "results"
+let outfits = [];
+let saved = [];
+let feedback = emptyFeedback();
+let openFeedback = null;       // index of the outfit asking "why?"
+let nextId = 1;
+let sortBy = "match";          // "match" | "low" | "high"
+
+const STEP_COUNT = 5;
+const BUDGET_MIN = 100, BUDGET_MAX = 800, BUDGET_GAP = 50;
+const personalized = () => answers.consent;
+/* With personalization off, the engine sees defaults, not the customer's answers. */
+const activeAnswers = () => personalized() ? answers : defaultAnswers();
+
+/* ==========================================================================
+   MOCK RECOMMENDATION ENGINE (rules-based)
+
+   GEN AI PLUG-IN POINT: buildOutfit() is where a real model would go. Send it
+   ONLY the activeAnswers() object, the session's feedback and a filtered
+   catalog; ask for structured output (item keys); then validate the response
+   against the same hard rules used here (department, avoided colors) before
+   showing it. Do not pass identity, location or browsing data.
+   ========================================================================== */
+
+function targetFit(slot, silhouette, a) {
+  if (silhouette === "small-top") return slot === "top" ? "slim" : "relaxed";
+  if (silhouette === "big-top") return slot === "top" ? "relaxed" : "slim";
+  return a.fit;
+}
+
+function silhouetteFor(index, a) {
+  if (a.silhouette !== "surprise") return a.silhouette;
+  const order = ["small-top", "big-top", "balanced"];
+  const open = order.filter(s => !feedback.sils.includes(s));
+  const list = open.length ? open : order;
+  return list[index % list.length];
+}
+
+function budgetTier(a) {
+  const mid = (a.budget[0] + a.budget[1]) / 2;
+  return mid < 200 ? "value" : mid < 480 ? "mid" : "premium";
+}
+
+/* Hard rules. Department comes only from the customer's explicit choice. */
+function pool(slot, ctx) {
+  const { a, silhouette } = ctx;
+  const matches = item => {
+    if (item.slot !== slot) return false;
+    if (a.dept !== "unisex" && !item.dept.includes(a.dept)) return false;
+    if (slot === "top" || slot === "bottom") {
+      if (!item.sil.includes(silhouette)) return false;
+      if (item.fit !== targetFit(slot, silhouette, a)) return false;
+    }
+    if (slot === "shoes" && !item.sil.includes(silhouette)) return false;
+    return true;
+  };
+  const allowed = CATALOG.filter(item => matches(item) && !a.avoid.includes(item.color));
+  if (allowed.length) return allowed;
+  ctx.relaxedAvoid = true;
+  return CATALOG.filter(matches);
+}
+
+function score(item, ctx) {
+  const { a, chosen, occasion, hero } = ctx;
+  let total = Math.random() * 1.5;
+
+  if (item.occ.includes(occasion)) total += 3;
+  else if (item.occ.some(o => a.occasions.includes(o))) total += 1;
+
+  const inPalette = !a.palettes.length || a.palettes.includes(item.family);
+  const weight = item.slot === "shoes" || item.slot === "layer" ? 0.5 : 1;
+  total += (inPalette ? 4 : item.family === "neutral" ? -1 : -5) * weight;
+  if (item.family === hero && (item.slot === "top" || item.slot === "bottom")) total += 3;
+  if (item.slot === "shoes" && item.family === "neutral") total += 2;
+
+  chosen.forEach(other => {
+    const bothColor = item.family !== "neutral" && other.family !== "neutral";
+    if (item.color === other.color && item.family !== "neutral") total -= 3;
+    else if (bothColor && item.family !== other.family) total -= 2;
+    else if (!bothColor) total += 1;
+    if (item.color === other.color && item.family === "neutral") total -= 1;
+  });
+
+  if (item.tier === ctx.tier) total += 3;
+  if (ctx.tier === "value") total -= item.price / 12;
+  Object.keys(PREFS).forEach(pref => { if (a[pref] && item.tags.includes(pref)) total += 2; });
+  if (item.id === "chunky-snk" && ctx.silhouette === "small-top") total += 2;
+
+  total -= 8 * (feedback.colors[item.color] || 0);
+  total -= 8 * (feedback.styles[item.id] || 0);
+  if (ctx.usedStyles.has(item.id)) total -= 4;
+  if (ctx.usedColors.has(item.color)) total -= 1.5;
+  return total;
+}
+
+function pickBest(slot, ctx) {
+  let best = null, bestScore = -Infinity;
+  pool(slot, ctx).forEach(item => {
+    const s = score(item, ctx);
+    if (s > bestScore) { best = item; bestScore = s; }
+  });
+  return best;
+}
+
+function outfitTotal(items) {
+  return Object.values(items).reduce((sum, item) => sum + (item ? item.price : 0), 0);
+}
+
+/* Step tiers down, then drop the optional piece, until the outfit fits the range. */
+function fitBudget(items, a) {
+  const down = { premium: "mid", mid: "value" };
+  for (let round = 0; round < 10 && outfitTotal(items) > a.budget[1]; round++) {
+    const priciest = ["layer", "shoes", "bottom", "top"]
+      .filter(slot => items[slot] && down[items[slot].tier])
+      .sort((x, y) => items[y].price - items[x].price)[0];
+    if (priciest) {
+      const item = items[priciest];
+      items[priciest] = BY_KEY.get(`${item.id}|${item.color}|${down[item.tier]}`);
+    } else if (items.layer) {
+      items.layer = null;
+    } else break;
+  }
+}
+
+function buildOutfit(index, keepSilhouette) {
+  const a = activeAnswers();
+  const others = outfits.filter(Boolean);
+  const usedStyles = new Set(others.flatMap(o => Object.values(o.items).filter(Boolean).map(i => i.id)));
+  const usedColors = new Set(others.flatMap(o => [o.items.top.color, o.items.bottom.color]));
+  const silhouette = keepSilhouette || silhouetteFor(index, a);
+  const occasions = a.occasions.length ? a.occasions : ["casual", "work", "weekend"];
+  const families = a.palettes.length ? a.palettes : ["neutral", "earth", "cool"];
+  const ctx = {
+    a, silhouette, usedStyles, usedColors, chosen: [],
+    occasion: occasions[index % occasions.length],
+    hero: families[index % families.length],
+    tier: budgetTier(a)
+  };
+
+  const items = {};
+  Object.keys(SLOTS).forEach(slot => {
+    items[slot] = pickBest(slot, ctx);
+    ctx.chosen.push(items[slot]);
+  });
+  if (personalized()) fitBudget(items, a);
+
+  return {
+    id: nextId++, silhouette, occasion: ctx.occasion, items,
+    relaxedAvoid: !!ctx.relaxedAvoid, seen: new Set(), savedId: null
+  };
+}
+
+function generateAll() {
+  outfits = [];
+  openFeedback = null;
+  for (let i = 0; i < 3; i++) outfits.push(buildOutfit(i));
+  sortOutfits();
+}
+
+/* Plain, countable checks, so the order can be explained to the customer. */
+function matchChecks(outfit) {
+  const a = activeAnswers();
+  const { top, bottom } = outfit.items;
+  const items = Object.values(outfit.items).filter(Boolean);
+  const total = outfitTotal(outfit.items);
+  const checks = [total >= a.budget[0] && total <= a.budget[1]];
+  if (a.occasions.length) checks.push(a.occasions.some(o => top.occ.includes(o) && bottom.occ.includes(o)));
+  if (a.palettes.length) checks.push(a.palettes.includes(top.family), a.palettes.includes(bottom.family));
+  Object.keys(PREFS).forEach(pref => { if (a[pref]) checks.push(items.some(i => i.tags.includes(pref))); });
+  return { met: checks.filter(Boolean).length, count: checks.length };
+}
+
+/* GEN AI PLUG-IN POINT: a model could rerank here, but keep a reason the
+   customer can check. Swaps don't reorder cards, so nothing moves mid-edit. */
+function sortOutfits() {
+  const rate = o => { const { met, count } = matchChecks(o); return met / count; };
+  const compare = {
+    match: (x, y) => rate(y) - rate(x),
+    low: (x, y) => outfitTotal(x.items) - outfitTotal(y.items),
+    high: (x, y) => outfitTotal(y.items) - outfitTotal(x.items)
+  };
+  outfits.sort(compare[sortBy]);
+}
+
+function swapItem(index, slot) {
+  const outfit = outfits[index];
+  const a = activeAnswers();
+  const current = outfit.items[slot];
+  if (current) outfit.seen.add(`${current.id}|${current.color}`);
+  const rest = Object.entries(outfit.items).filter(([s, i]) => s !== slot && i).map(([, i]) => i);
+  const room = a.budget[1] - rest.reduce((sum, i) => sum + i.price, 0);
+  const ctx = {
+    a, silhouette: outfit.silhouette, occasion: outfit.occasion, chosen: rest,
+    hero: null, tier: budgetTier(a), usedColors: new Set(),
+    usedStyles: new Set(current ? [current.id] : [])
+  };
+  const options = pool(slot, ctx).filter(i => !outfit.seen.has(`${i.id}|${i.color}`));
+  const affordable = options.filter(i => i.price <= room);
+  const ranked = (affordable.length && personalized() ? affordable : options)
+    .map(item => [score(item, ctx), item]).sort((x, y) => y[0] - x[0]);
+  if (!ranked.length) {
+    outfit.seen.clear();
+    return false;
+  }
+  outfit.items[slot] = ranked[0][1];
+  outfit.savedId = null;
+  return true;
+}
+
+/* GEN AI PLUG-IN POINT: a real system would pass this session-only feedback back
+   to the model as explicit context. It should not become a stored profile. */
+function applyFeedback(index, reason) {
+  const outfit = outfits[index];
+  const { top, bottom, shoes } = outfit.items;
+  let message;
+  if (!personalized()) {
+    message = "Thanks. Personalization is off, so we replaced this outfit without learning from it.";
+  } else if (reason === "style") {
+    [top, bottom, shoes].forEach(i => { feedback.styles[i.id] = (feedback.styles[i.id] || 0) + 1; });
+    message = `Fewer pieces like the ${top.name} and ${bottom.name}.`;
+  } else if (reason === "color") {
+    const colors = [...new Set([top.color, bottom.color])];
+    colors.forEach(c => { feedback.colors[c] = (feedback.colors[c] || 0) + 1; });
+    message = `Less ${colors.map(c => COLORS[c].label.toLowerCase()).join(" and ")}.`;
+  } else if (reason === "fit") {
+    [top, bottom].forEach(i => { feedback.styles[i.id] = (feedback.styles[i.id] || 0) + 1; });
+    if (answers.silhouette === "surprise") {
+      feedback.sils.push(outfit.silhouette);
+      message = `Moving away from the ${SILHOUETTES[outfit.silhouette].label} shape.`;
+    } else {
+      message = `Trying different cuts, keeping your ${SILHOUETTES[outfit.silhouette].label} goal.`;
+    }
+  } else {
+    message = "Replaced this outfit. Tell us more by choosing style, color or fit next time.";
+  }
+  if (personalized()) feedback.log.push(message);
+  const keep = reason === "fit" && answers.silhouette === "surprise" ? null : outfit.silhouette;
+  outfits[index] = buildOutfit(index, keep);
+  openFeedback = null;
+  return message;
+}
+
+/* ==========================================================================
+   "WHY THIS WORKS" TEMPLATES
+
+   GEN AI PLUG-IN POINT: buildWhy() is where a model could write the explanation.
+   Keep the facts (colors, prices, tags) from the outfit data, and run output
+   through a tone check that rejects judgmental body language.
+   ========================================================================== */
+
+const names = list => list.length < 2 ? list.join("") : `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}`;
+const cap = text => text.charAt(0).toUpperCase() + text.slice(1);
+const article = text => /^[aeiou]/i.test(text) ? "an" : "a";
+const isPlural = item => /s$/.test(item.name);
+
+function proportionText(outfit) {
+  const { top, bottom, shoes } = outfit.items;
+  const close = `The ${shoes.name} ${shoes.note}.`;
+  if (outfit.silhouette === "small-top") {
+    return `The ${top.name} stays close to the body, so the volume in the ${bottom.name} stands out below it. That difference is what creates your small top, bigger bottom contrast. ${close}`;
+  }
+  if (outfit.silhouette === "big-top") {
+    return `The ${top.name} brings the volume up top, and the ${bottom.name} ${isPlural(bottom) ? "keep" : "keeps"} a narrower line underneath. That difference creates your bigger top, slimmer bottom contrast. ${close}`;
+  }
+  return `The ${top.name} and ${bottom.name} carry a similar amount of volume, so neither half dominates. That gives you an even, balanced line from shoulder to hem. ${close}`;
+}
+
+function colorStory(outfit) {
+  const { top, bottom } = outfit.items;
+  const pair = [...new Set([top.color, bottom.color])];
+  const labels = pair.map(c => COLORS[c].label.toLowerCase());
+  const families = [...new Set(pair.map(c => COLORS[c].family))];
+  if (pair.length === 1) return `A matching ${labels[0]} top and bottom reads as one long, simple line.`;
+  if (families.length === 1 && families[0] === "neutral") return `${cap(names(labels))} are both neutrals, so the contrast comes from light and dark rather than from hue.`;
+  if (families.length === 1 && families[0] === "bold") return `${cap(names(labels))} are both bright, so together they make a confident, high-contrast pairing.`;
+  if (families.length === 1) return `${cap(names(labels))} come from the same color family, so they sit together easily.`;
+  if (families.includes("neutral")) {
+    const lead = pair.find(c => COLORS[c].family !== "neutral");
+    return `The neutral lets ${COLORS[lead].label.toLowerCase()} lead without competing with it.`;
+  }
+  return `${cap(names(labels))} come from different color families, which adds contrast.`;
+}
+
+function colorText(outfit, a) {
+  const { top, bottom } = outfit.items;
+  const pair = [...new Set([top.color, bottom.color])];
+  const inPalette = pair.filter(c => a.palettes.includes(COLORS[c].family));
+  const matched = [...new Set(inPalette.map(c => COLORS[c].family))];
+  let text;
+  if (!a.palettes.length) text = "You didn't pick a palette, so we kept the colors versatile.";
+  else if (matched.length) text = `The ${names(inPalette.map(c => COLORS[c].label.toLowerCase()))} ${inPalette.length > 1 ? "fit" : "fits"} the ${names(matched.map(f => PALETTES[f].label))} you picked.`;
+  else text = "These colors step outside the palettes you picked. Swap any piece to try another option.";
+  if (a.avoid.length && !outfit.relaxedAvoid) text += " Nothing here uses the colors you avoid.";
+  if (outfit.relaxedAvoid) text += " You avoided every color available for one piece, so we had to use one of them.";
+  return text;
+}
+
+function detailsText(outfit, a) {
+  const items = Object.values(outfit.items).filter(Boolean);
+  const total = outfitTotal(outfit.items);
+  const parts = [];
+  if (a.occasions.length && outfit.items.top.occ.includes(outfit.occasion)) {
+    parts.push(`Chosen with ${OCCASIONS[outfit.occasion].toLowerCase()} in mind.`);
+  }
+  const [low, high] = a.budget;
+  if (total > high) parts.push(`At $${total}, this is over your $${low}–$${high} range; it was the closest match we could build.`);
+  else if (total < low) parts.push(`At $${total}, this comes in under your $${low}–$${high} range.`);
+  else parts.push(`At $${total}, this is within your $${low}–$${high} range.`);
+  Object.keys(PREFS).forEach(pref => {
+    if (!a[pref]) return;
+    const match = items.find(i => i.tags.includes(pref));
+    if (!match) return;
+    if (pref === "sustainable") parts.push(`For sustainable materials: the ${match.name} uses ${match.material} (mock data).`);
+    if (pref === "durable") parts.push(`For made to last: the ${match.name} is built from ${match.material} (mock data).`);
+    if (pref === "trend") parts.push(`For trend-forward: the ${match.name} brings in a newer shape.`);
+  });
+  return parts.join(" ");
+}
+
+function buildWhy(outfit) {
+  if (!personalized()) {
+    return [`${proportionText(outfit)}`, `${colorStory(outfit)} This is a general pick and doesn't use your answers.`];
+  }
+  const a = activeAnswers();
+  return [proportionText(outfit), colorText(outfit, a), detailsText(outfit, a)];
+}
+
+/* Body type changes only these notes. It never filters or ranks products. */
+const BODY_NOTES = {
+  ectomorph: "On a lean, narrow frame, fabrics with some structure hold their shape, so the lines of this outfit read clearly.",
+  mesomorph: "On an athletic, balanced frame, a little stretch in close-fitting pieces gives ease across the shoulders and through the leg.",
+  endomorph: "On a fuller, softer frame, fabrics with good drape and a comfortable, secure waistband move with you and keep the shape you chose."
+};
+const SIL_NOTES = {
+  "small-top": "Try the top tucked or at the waistband, and let the leg fall fully to the shoe. A hem that just skims the shoe keeps the volume clean.",
+  "big-top": "A half-tuck or a pushed-up sleeve gives the larger top an easy shape. A hem at or just above the ankle shows off the narrower leg.",
+  "balanced": "Keep both layers untucked for an easy line, or tuck the top to add a defined waist. Either way works."
+};
+
+function fitNotes(outfit) {
+  const a = activeAnswers();
+  const notes = [];
+  if (BODY_NOTES[a.body]) notes.push(BODY_NOTES[a.body]);
+  notes.push(SIL_NOTES[outfit.silhouette]);
+  if (outfit.silhouette === "balanced") {
+    notes.push(`Both main pieces follow your ${FITS[a.fit].toLowerCase()} fit preference.`);
+  } else if (a.fit !== "regular") {
+    const slot = outfit.silhouette === "small-top" ? (a.fit === "slim" ? "top" : "bottom") : (a.fit === "slim" ? "bottom" : "top");
+    notes.push(`Your ${FITS[a.fit].toLowerCase()} fit shows up in the ${slot}. The other piece is cut differently on purpose, to create the contrast.`);
+  } else {
+    notes.push("This shape mixes fits on purpose, so one piece runs closer and the other roomier than your regular preference.");
+  }
+  notes.push("Body types are a guide, not a rule. You decide what feels good.");
+  return notes;
+}
+
+/* ==========================================================================
+   FLAT ILLUSTRATIONS (inline SVG, no photos or logos)
+   ========================================================================== */
+
+function shade(hex, amount) {
+  const value = parseInt(hex.slice(1), 16);
+  const channel = shift => Math.max(0, Math.min(255, Math.round(((value >> shift) & 255) * (1 + amount))));
+  return `rgb(${channel(16)},${channel(8)},${channel(0)})`;
+}
+const lineFor = hex => {
+  const value = parseInt(hex.slice(1), 16);
+  const light = ((value >> 16) & 255) + ((value >> 8) & 255) + (value & 255) > 390;
+  return light ? shade(hex, -0.32) : shade(hex, 0.5);
+};
+
+const CX = 118, TOP_Y = 26, WAIST = 128, HEM = 352;
+
+function drawTop(item) {
+  const hex = COLORS[item.color].hex, line = lineFor(hex);
+  const dims = {
+    crop: [37, 102, 18, 44], tee: [38, 124, 20, 46], regtee: [45, 130, 24, 50],
+    shirt: [45, 134, 26, 116], knit: [45, 130, 26, 116], overtee: [59, 148, 30, 60],
+    sweat: [59, 140, 30, 120], bigshirt: [59, 150, 30, 120]
+  };
+  const c = CX, y = TOP_Y;
+  let path;
+  if (item.shape === "tank") {
+    path = `M${c - 26} ${y} Q${c} ${y + 34} ${c + 26} ${y} L${c + 35} ${y + 44} L${c + 37} ${y + 122} L${c - 37} ${y + 122} L${c - 35} ${y + 44} Z`;
+  } else {
+    const [hw, len, reach, sleeve] = dims[item.shape];
+    path = `M${c - 17} ${y} Q${c} ${y + 15} ${c + 17} ${y} L${c + hw} ${y + 9} L${c + hw + reach} ${y + sleeve} L${c + hw + reach - 16} ${y + sleeve + 8} L${c + hw} ${y + 46} L${c + hw} ${y + len} L${c - hw} ${y + len} L${c - hw} ${y + 46} L${c - hw - reach + 16} ${y + sleeve + 8} L${c - hw - reach} ${y + sleeve} L${c - hw} ${y + 9} Z`;
+  }
+  let extra = "";
+  if (item.detail === "placket") extra = `<path d="M${c} ${y + 8} V${y + (dims[item.shape] ? dims[item.shape][1] : 120)}" stroke="${line}" fill="none"/><path d="M${c - 17} ${y} L${c} ${y + 16} L${c + 17} ${y}" stroke="${line}" fill="none" stroke-width="1.5"/>`;
+  if (item.detail === "collar") extra = `<path d="M${c - 17} ${y} L${c} ${y + 18} L${c + 17} ${y}" stroke="${line}" fill="none" stroke-width="1.5"/>`;
+  return `<path d="${path}" fill="${hex}" stroke="${line}" stroke-width="1.2" stroke-linejoin="round"/>${extra}`;
+}
+
+function drawBottom(item) {
+  const hex = COLORS[item.color].hex, line = lineFor(hex);
+  const c = CX, y = WAIST;
+  if (item.shape === "skirt") {
+    return `<path d="M${c - 35} ${y} H${c + 35} L${c + 56} ${HEM - 44} H${c - 56} Z" fill="${hex}" stroke="${line}" stroke-width="1.2" stroke-linejoin="round"/>`;
+  }
+  const dims = { slim: [35, 22, 5], straight: [37, 35, 5], wide: [39, 62, 7], cargo: [39, 54, 7] };
+  const [waist, hem, gap] = dims[item.shape];
+  const legs = `M${c - waist} ${y} H${c + waist} L${c + hem} ${HEM} H${c + gap} L${c} ${y + 78} L${c - gap} ${HEM} H${c - hem} Z`;
+  let extra = "";
+  if (item.shape === "cargo") {
+    extra = `<rect x="${c + 20}" y="${y + 104}" width="24" height="30" rx="2" fill="none" stroke="${line}"/><rect x="${c - 44}" y="${y + 104}" width="24" height="30" rx="2" fill="none" stroke="${line}"/>`;
+  }
+  return `<path d="${legs}" fill="${hex}" stroke="${line}" stroke-width="1.2" stroke-linejoin="round"/>${extra}`;
+}
+
+function drawShoe(item, x, flip) {
+  const hex = COLORS[item.color].hex, line = lineFor(hex);
+  const uppers = {
+    sneaker: "M2 34 L2 16 Q14 10 22 16 L34 24 Q48 26 52 34 Z",
+    chunky:  "M2 34 L2 12 Q14 6 22 12 L34 22 Q50 24 54 34 Z",
+    loafer:  "M2 34 L3 22 Q14 19 24 22 L36 26 Q48 28 52 34 Z",
+    boot:    "M3 34 L3 -8 H23 L25 16 Q46 22 52 34 Z",
+    heel:    "M8 32 L14 8 L22 8 L24 18 L46 28 Q52 30 52 34 H26 L22 22 Z"
+  };
+  const soles = {
+    sneaker: `<rect x="0" y="34" width="54" height="6" rx="2" fill="#f8f6f1" stroke="#8a8378"/>`,
+    chunky:  `<path d="M0 34 H56 L58 44 Q58 48 54 48 H3 Q-1 48 0 44 Z" fill="#f8f6f1" stroke="#8a8378"/>`,
+    loafer:  `<rect x="0" y="34" width="54" height="4" rx="1" fill="${shade(hex, -0.4)}"/>`,
+    boot:    `<rect x="0" y="34" width="54" height="5" rx="1" fill="${shade(hex, -0.4)}"/>`,
+    heel:    `<rect x="9" y="32" width="9" height="16" fill="${shade(hex, -0.3)}"/><rect x="28" y="34" width="26" height="3" rx="1" fill="${shade(hex, -0.3)}"/>`
+  };
+  const transform = flip ? `translate(${x},362) scale(-1,1)` : `translate(${x},362)`;
+  return `<g transform="${transform}"><path d="${uppers[item.shape]}" fill="${hex}" stroke="${line}" stroke-width="1.2" stroke-linejoin="round"/>${soles[item.shape]}</g>`;
+}
+
+function drawLayer(item) {
+  if (!item) return "";
+  const hex = COLORS[item.color].hex, line = lineFor(hex);
+  const stroke = `stroke="${line}" stroke-width="1.2" stroke-linejoin="round"`;
+  const art = {
+    jacket: `<path d="M26 0 L4 10 L-12 92 L6 96 L14 54 L14 124 H38 L40 26 L42 124 H66 L66 54 L74 96 L92 92 L76 10 L54 0 L40 26 Z" fill="${hex}" ${stroke}/>`,
+    bag:    `<path d="M18 38 Q40 -20 62 38" fill="none" stroke="${hex}" stroke-width="4"/><path d="M18 38 Q40 -20 62 38" fill="none" stroke="${line}" stroke-width=".8"/><rect x="8" y="38" width="64" height="48" rx="8" fill="${hex}" ${stroke}/><path d="M8 54 H72" stroke="${line}"/>`,
+    scarf:  `<path d="M24 0 H54 L52 130 H26 Z" fill="${hex}" ${stroke}/><path d="M28 130 v12 M34 130 v12 M40 130 v12 M46 130 v12 M51 130 v12" stroke="${line}"/>`,
+    cap:    `<path d="M10 52 Q12 6 42 6 Q70 6 72 52 Z" fill="${hex}" ${stroke}/><path d="M60 52 Q84 50 94 62 L60 62 Z" fill="${hex}" ${stroke}/>`
+  };
+  return `<g transform="translate(218,44)">${art[item.shape]}</g>`;
+}
+
+function drawOutfit(outfit) {
+  const { top, bottom, shoes, layer } = outfit.items;
+  const label = names([top, bottom, shoes, layer].filter(Boolean).map(i => `${COLORS[i.color].label.toLowerCase()} ${i.name}`));
+  return `<svg viewBox="0 0 320 416" role="img" aria-label="Flat illustration: ${label}">
+    ${drawBottom(bottom)}${drawTop(top)}
+    ${drawShoe(shoes, CX + 7, false)}${drawShoe(shoes, CX - 7, true)}
+    ${drawLayer(layer)}
+  </svg>`;
+}
+
+/* ==========================================================================
+   VIEWS
+   ========================================================================== */
+
+const app = document.getElementById("app");
+const toastEl = document.getElementById("toast");
+let toastTimer;
+
+function toast(message) {
+  toastEl.textContent = message;
+  toastEl.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove("show"), 3600);
+}
+
+function howWePersonalize(tag = "h2") {
+  const list = describeAnswers().map(([label, value]) => `<li>${label}: ${value}</li>`).join("");
+  return `<section class="panel" aria-label="How we personalize">
+    <${tag}>How we personalize</${tag}>
+    <p>Recommendations use only the answers you gave in this quiz. We don't use browsing history from other sites, and we never infer sensitive life events or health information.</p>
+    <details><summary>See what's being used right now</summary>
+      ${personalized() ? `<ul>${list}</ul>` : "<p>Nothing. Personalization is off.</p>"}
+    </details>
+  </section>`;
+}
+
+function describeAnswers() {
+  const a = answers;
+  const none = "No preference";
+  return [
+    ["Shopping in", DEPTS[a.dept]],
+    ["Occasions", a.occasions.map(o => OCCASIONS[o]).join(", ") || none],
+    ["Palettes", a.palettes.map(p => PALETTES[p].label).join(", ") || none],
+    ["Colors to avoid", a.avoid.map(c => COLORS[c].label).join(", ") || "None"],
+    ["Body type", BODY_TYPES[a.body].label],
+    ["Fit", FITS[a.fit]],
+    ["Silhouette goal", SILHOUETTES[a.silhouette].label],
+    ["Budget per outfit", `$${a.budget[0]}–$${a.budget[1]}`],
+    ["Shopping preferences", Object.keys(PREFS).filter(p => a[p]).map(p => PREFS[p].label).join(", ") || none]
+  ];
+}
+
+function option(type, name, value, label, desc, checked, inner = "") {
+  return `<label class="opt"><input type="${type}" name="${name}" value="${value}" ${checked ? "checked" : ""}>
+    <span class="opt-body">${label}${desc ? `<small>${desc}</small>` : ""}${inner}</span></label>`;
+}
+
+function renderIntro() {
+  return `<div class="wrap fade">
+    <p class="eyebrow">Five quick questions</p>
+    <h1 class="intro-title" tabindex="-1">Outfits built from what you tell us.</h1>
+    <p class="lede">Answer a short quiz and get three complete looks, each with a plain-language reason it was chosen for you.</p>
+    <ol class="intro-steps">
+      <li><b>1</b> Occasion and vibe</li>
+      <li><b>2</b> Color palette</li>
+      <li><b>3</b> Body shape and fit goals (optional)</li>
+      <li><b>4</b> Budget and shopping preferences</li>
+      <li><b>5</b> Review and consent</li>
+    </ol>
+    <button class="btn primary" data-action="start">Start the quiz</button>
+    <div class="intro-panel">${howWePersonalize()}</div>
+  </div>`;
+}
+
+const STEP_VIEWS = {
+  1: () => ({
+    title: "What are you dressing for?",
+    hint: "Pick as many as you like.",
+    body: `<fieldset class="section"><legend>Occasion and vibe</legend>
+        <div class="opts two">${Object.entries(OCCASIONS).map(([k, v]) => option("checkbox", "occasions", k, v, "", answers.occasions.includes(k))).join("")}</div>
+      </fieldset>
+      <fieldset class="section"><legend>Which section should we shop?</legend>
+        <p class="hint">Your choice alone sets this. We never infer it from anything else.</p>
+        <div class="opts three">${Object.entries(DEPTS).map(([k, v]) => option("radio", "dept", k, v, "", answers.dept === k)).join("")}</div>
+      </fieldset>`
+  }),
+  2: () => ({
+    title: "Which colors feel like you?",
+    hint: "Pick one or more palettes, then mark any colors to skip.",
+    body: `<fieldset class="section"><legend>Color palette</legend>
+        <div class="opts two">${Object.entries(PALETTES).map(([k, p]) => option("checkbox", "palettes", k, p.label, p.colors.map(c => COLORS[c].label.toLowerCase()).join(", "), answers.palettes.includes(k),
+          `<span class="swatches" aria-hidden="true">${p.colors.map(c => `<i style="background:${COLORS[c].hex}"></i>`).join("")}</span>`)).join("")}</div>
+      </fieldset>
+      <fieldset class="section"><legend>Colors I avoid</legend>
+        <p class="hint">These won't appear in your outfits.</p>
+        <div class="chips">${ALL.map(c => `<label class="chip"><input type="checkbox" name="avoid" value="${c}" ${answers.avoid.includes(c) ? "checked" : ""}><span><i style="background:${COLORS[c].hex}" aria-hidden="true"></i>${COLORS[c].label}</span></label>`).join("")}</div>
+      </fieldset>`
+  }),
+  3: () => ({
+    title: "How do you like clothes to fit?",
+    hint: "This step is optional. Skip anything you'd rather not answer.",
+    body: `<fieldset class="section"><legend>Body type (optional)</legend>
+        <p class="hint">Used only for the fit notes on your results. It doesn't change which products you see.</p>
+        <div class="opts two">${Object.entries(BODY_TYPES).map(([k, b]) => option("radio", "body", k, b.label, b.desc, answers.body === k)).join("")}</div>
+        <p class="note">Body types are a guide, not a rule. You decide what feels good.</p>
+      </fieldset>
+      <fieldset class="section"><legend>Fit preference</legend>
+        <div class="opts three">${Object.entries(FITS).map(([k, v]) => option("radio", "fit", k, v, "", answers.fit === k)).join("")}</div>
+      </fieldset>
+      <fieldset class="section"><legend>Silhouette goal</legend>
+        <div class="opts">${Object.entries(SILHOUETTES).map(([k, s]) => option("radio", "silhouette", k, s.label, s.desc, answers.silhouette === k)).join("")}</div>
+      </fieldset>`
+  }),
+  4: () => ({
+    title: "What's your budget?",
+    hint: "Per complete outfit, in placeholder prices.",
+    body: `<div class="section">
+        <p class="section-title">Price range</p>
+        <p class="budget-value" id="budgetValue">${budgetLabel()}</p>
+        <div class="range">
+          <div class="range-fill" id="rangeFill"></div>
+          <input type="range" id="budgetLow" min="${BUDGET_MIN}" max="${BUDGET_MAX}" step="25" value="${answers.budget[0]}" aria-label="Minimum budget per outfit">
+          <input type="range" id="budgetHigh" min="${BUDGET_MIN}" max="${BUDGET_MAX}" step="25" value="${answers.budget[1]}" aria-label="Maximum budget per outfit">
+        </div>
+        <div class="range-ends"><span>$${BUDGET_MIN}</span><span>$${BUDGET_MAX}</span></div>
+      </div>
+      <div class="section">
+        <p class="section-title">Shopping preferences</p>
+        ${Object.entries(PREFS).map(([k, p]) => `<label class="switch"><span>${p.label}<small>${p.desc}</small></span><input type="checkbox" role="switch" name="pref" value="${k}" ${answers[k] ? "checked" : ""}></label>`).join("")}
+      </div>`
+  }),
+  5: () => {
+    const stepOf = { "Shopping in": 1, "Occasions": 1, "Palettes": 2, "Colors to avoid": 2, "Body type": 3, "Fit": 3, "Silhouette goal": 3, "Budget per outfit": 4, "Shopping preferences": 4 };
+    return {
+      title: "Does this look right?",
+      hint: "Review your answers before we build your outfits.",
+      body: `<dl class="review">${describeAnswers().map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd>
+          <button class="link" data-action="goto" data-step="${stepOf[label]}" aria-label="Edit ${label}">Edit</button></div>`).join("")}</dl>
+        <label class="consent"><input type="checkbox" name="consent" ${answers.consent ? "checked" : ""}>
+          <span>Use only the answers I gave here to personalize my results.<small>No other data is used. Uncheck this to see general picks instead.</small></span></label>`
+    };
+  }
+};
+
+function budgetLabel() {
+  return `$${answers.budget[0]} – $${answers.budget[1]}`;
+}
+
+function paintRange() {
+  const fill = document.getElementById("rangeFill");
+  if (!fill) return;
+  const pct = v => (v - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN) * 100;
+  fill.style.left = pct(answers.budget[0]) + "%";
+  fill.style.width = pct(answers.budget[1]) - pct(answers.budget[0]) + "%";
+  document.getElementById("budgetValue").textContent = budgetLabel();
+  document.getElementById("budgetLow").setAttribute("aria-valuetext", `$${answers.budget[0]}`);
+  document.getElementById("budgetHigh").setAttribute("aria-valuetext", `$${answers.budget[1]}`);
+}
+
+function renderStep(step) {
+  const { title, hint, body } = STEP_VIEWS[step]();
+  const last = step === STEP_COUNT;
+  return `<div class="wrap fade">
+    <div class="progress-row"><span>Step ${step} of ${STEP_COUNT}</span><span>${Math.round(step / STEP_COUNT * 100)}%</span></div>
+    <div class="progress" role="progressbar" aria-label="Quiz progress" aria-valuemin="0" aria-valuemax="${STEP_COUNT}" aria-valuenow="${step}"><i style="width:${step / STEP_COUNT * 100}%"></i></div>
+    <h1 class="q-title" tabindex="-1">${title}</h1>
+    <p class="lede">${hint}</p>
+    ${body}
+    <div class="nav">
+      <button class="btn" data-action="back">Back</button>
+      <button class="btn primary" data-action="next">${last ? "See my outfits" : "Continue"}</button>
+    </div>
+    ${last ? `<div class="intro-panel">${howWePersonalize()}</div>` : ""}
+  </div>`;
+}
+
+function renderOutfit(outfit, index) {
+  const present = Object.keys(SLOTS).filter(slot => outfit.items[slot]);
+  const colors = [...new Set(present.map(slot => outfit.items[slot].color))];
+  const a = activeAnswers();
+  const myTier = budgetTier(a);
+  const why = buildWhy(outfit).filter(Boolean);
+
+  return `<article class="card" id="outfit-${index}" aria-labelledby="outfit-title-${index}">
+    <div class="card-head">
+      <div>
+        <p class="eyebrow">Outfit ${index + 1} of ${outfits.length}</p>
+        <h3 class="card-title" id="outfit-title-${index}" tabindex="-1">${SILHOUETTES[outfit.silhouette].label}</h3>
+        <p class="item-meta">${OCCASIONS[outfit.occasion]}</p>
+        ${personalized() ? `<p class="match-note">${index === 0 && sortBy === "match" ? "<b>Best match.</b> " : ""}Meets ${matchChecks(outfit).met} of ${matchChecks(outfit).count} checks against your answers</p>` : ""}
+      </div>
+      <p class="total"><span class="sr">Mock outfit total: </span>$${outfitTotal(outfit.items)}</p>
+    </div>
+    <div class="card-grid">
+      <div>
+        <div class="lay">${drawOutfit(outfit)}</div>
+        <div class="strip" aria-hidden="true">${colors.map(c => `<i style="background:${COLORS[c].hex}"></i>`).join("")}</div>
+        <p class="strip-key">${colors.map(c => `<span>${COLORS[c].label}</span>`).join("")}</p>
+        <p class="strip-why">${colorStory(outfit)}</p>
+      </div>
+      <div>
+        <ul class="items">
+          ${present.map(slot => {
+            const item = outfit.items[slot];
+            return `<li>
+              <div>
+                <span class="slot">${SLOTS[slot]}</span><br>
+                <span class="item-name">${cap(COLORS[item.color].label)} ${item.name}</span><br>
+                <span class="item-meta">$${item.price}, ${TIERS[item.tier]}, ${item.material}</span>
+              </div>
+              <button class="btn small" data-action="swap" data-index="${index}" data-slot="${slot}" data-focus="swap-${index}-${slot}" aria-label="Swap this item: ${item.name}">Swap this item</button>
+            </li>`;
+          }).join("")}
+        </ul>
+        <div class="why">
+          <h4>Why this works for you</h4>
+          ${why.map(p => `<p>${p}</p>`).join("")}
+        </div>
+        <div class="actions">
+          <button class="btn small" data-action="shuffle" data-index="${index}" data-focus="shuffle-${index}">Shuffle outfit</button>
+          <button class="btn small" data-action="save" data-index="${index}" data-focus="save-${index}" aria-pressed="${!!outfit.savedId}">${outfit.savedId ? "Saved" : "Save"}</button>
+          <button class="btn small" data-action="dislike" data-index="${index}" data-focus="dislike-${index}" aria-expanded="${openFeedback === index}"><span aria-hidden="true">👎</span> Not for me</button>
+        </div>
+        ${openFeedback === index ? `<div class="fb" role="group" aria-labelledby="fb-title-${index}">
+          <p class="fb-title" id="fb-title-${index}">What wasn't right?</p>
+          <div class="fb-btns">
+            <button class="btn small" data-action="reason" data-index="${index}" data-reason="style" data-focus="reason-${index}">Wrong style</button>
+            <button class="btn small" data-action="reason" data-index="${index}" data-reason="color">Wrong color</button>
+            <button class="btn small" data-action="reason" data-index="${index}" data-reason="fit">Wrong fit</button>
+            <button class="btn small" data-action="reason" data-index="${index}" data-reason="other">Other</button>
+            <button class="link" data-action="dislike-cancel" data-index="${index}">Cancel</button>
+          </div>
+        </div>` : ""}
+      </div>
+    </div>
+    <section class="sub">
+      <h4>Fit and silhouette notes</h4>
+      ${fitNotes(outfit).map(p => `<p>${p}</p>`).join("")}
+    </section>
+    <details class="sub" open>
+      <summary><h4>Illustrative brand suggestions (mock data)</h4></summary>
+      <div class="brands">
+        ${present.map(slot => {
+          const item = outfit.items[slot];
+          return `<div class="brand-item"><h5>${cap(item.name)}</h5>
+            ${Object.keys(TIERS).map(tier => `<div class="brand-row ${item.tier === tier ? "match" : ""}"><span>${TIERS[tier]}</span><span>${BRANDS[slot][tier]}</span></div>`).join("")}
+          </div>`;
+        }).join("")}
+      </div>
+      <p class="fine">Examples only, with the tier used for this item highlighted. Not endorsements, and not claims about any brand's actual prices, stock or materials.</p>
+    </details>
+  </article>`;
+}
+
+function renderResults() {
+  const on = personalized();
+  return `<div class="wrap wrap-wide">
+    <div class="results-head">
+      <div>
+        <p class="eyebrow">Your results</p>
+        <h1 class="results-title" tabindex="-1">${on ? "Three outfits built from your answers" : "Three general outfit picks"}</h1>
+        <p class="human note">Suggestions are generated from your preferences; tell us if something feels off.</p>
+        <div class="controls">
+          <button class="btn small" data-action="edit">Edit my answers</button>
+          <button class="btn small" data-action="clear">Clear my data</button>
+          <button class="btn small" data-action="toggle-personalization" data-focus="toggle">${on ? "Turn off personalization" : "Turn on personalization"}</button>
+        </div>
+      </div>
+      ${howWePersonalize("h2")}
+    </div>
+    ${on ? "" : `<div class="banner"><span>Personalization is off. These picks don't use your answers, and they show the Unisex/Mix section.</span></div>`}
+    ${feedback.log.length ? `<div class="log"><strong>Adjusted from your feedback:</strong><ul>${feedback.log.map(m => `<li>${m}</li>`).join("")}</ul></div>` : ""}
+    <h2 class="sr">Outfits</h2>
+    <div class="suggested" role="group" aria-label="Suggested order">
+      <span>Suggested order:</span>
+      <button class="btn small" data-action="sort" data-sort="match" data-focus="sort-match" aria-pressed="${sortBy === "match"}">${on ? "Best match" : "General"}</button>
+      <button class="btn small" data-action="sort" data-sort="low" data-focus="sort-low" aria-pressed="${sortBy === "low"}">Price, low to high</button>
+      <button class="btn small" data-action="sort" data-sort="high" data-focus="sort-high" aria-pressed="${sortBy === "high"}">Price, high to low</button>
+    </div>
+    ${outfits.map(renderOutfit).join("")}
+    ${saved.length ? `<section class="saved" aria-label="Saved outfits">
+      <h2>Saved outfits</h2>
+      <p>Kept for this session only.</p>
+      <ul>${saved.map(s => `<li><span>${s.label}</span><button class="btn small" data-action="unsave" data-id="${s.id}">Remove</button></li>`).join("")}</ul>
+    </section>` : ""}
+  </div>`;
+}
+
+function render(focusTarget) {
+  if (view === "intro") app.innerHTML = renderIntro();
+  else if (view === "results") app.innerHTML = renderResults();
+  else app.innerHTML = renderStep(view);
+  paintRange();
+  const target = focusTarget ? app.querySelector(focusTarget) : app.querySelector("h1");
+  if (target) target.focus({ preventScroll: !!focusTarget });
+  if (!focusTarget) window.scrollTo(0, 0);
+}
+
+/* ==========================================================================
+   EVENTS
+   ========================================================================== */
+
+function toggleIn(list, value, on) {
+  const i = list.indexOf(value);
+  if (on && i < 0) list.push(value);
+  if (!on && i >= 0) list.splice(i, 1);
+}
+
+app.addEventListener("change", event => {
+  const input = event.target;
+  if (input.type === "range") return;
+  if (["occasions", "palettes", "avoid"].includes(input.name)) toggleIn(answers[input.name], input.value, input.checked);
+  else if (input.name === "pref") answers[input.value] = input.checked;
+  else if (input.name === "consent") answers.consent = input.checked;
+  else if (input.type === "radio") answers[input.name] = input.value;
+});
+
+app.addEventListener("input", event => {
+  const input = event.target;
+  if (input.type !== "range") return;
+  const value = Number(input.value);
+  if (input.id === "budgetLow") {
+    answers.budget[0] = Math.min(value, answers.budget[1] - BUDGET_GAP);
+    input.value = answers.budget[0];
+  } else {
+    answers.budget[1] = Math.max(value, answers.budget[0] + BUDGET_GAP);
+    input.value = answers.budget[1];
+  }
+  paintRange();
+});
+
+function saveLabel(outfit) {
+  const { top, bottom, shoes } = outfit.items;
+  return `${cap(COLORS[top.color].label)} ${top.name}, ${COLORS[bottom.color].label.toLowerCase()} ${bottom.name}, ${COLORS[shoes.color].label.toLowerCase()} ${shoes.name}`;
+}
+
+const clearDialog = document.getElementById("clearDialog");
+
+const actions = {
+  start()  { view = 1; render(); },
+  theme(el) {
+    const dark = el.textContent === "Dark mode";
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    paintTheme(dark);
+  },
+  sort(el) {
+    sortBy = el.dataset.sort;
+    openFeedback = null;
+    sortOutfits();
+    render(`[data-focus="sort-${sortBy}"]`);
+    toast("Outfits reordered.");
+  },
+  next()   {
+    if (view < STEP_COUNT) { view += 1; render(); return; }
+    generateAll();
+    view = "results";
+    render();
+  },
+  back()   { view = view === 1 ? "intro" : view - 1; render(); },
+  goto(el) { view = Number(el.dataset.step); render(); },
+  edit()   { view = 1; render(); },
+  clear()  { clearDialog.showModal(); },
+  "clear-cancel"() { clearDialog.close(); },
+  "clear-confirm"() {
+    clearDialog.close();
+    answers = defaultAnswers();
+    outfits = []; saved = []; feedback = emptyFeedback(); openFeedback = null;
+    view = "intro";
+    render();
+    toast("Your answers, saved outfits and feedback have been cleared.");
+  },
+  "toggle-personalization"() {
+    answers.consent = !answers.consent;
+    generateAll();
+    render('[data-focus="toggle"]');
+    toast(answers.consent ? "Personalization is on." : "Personalization is off. Showing general picks.");
+  },
+  swap(el) {
+    const { index, slot } = el.dataset;
+    const swapped = swapItem(Number(index), slot);
+    render(`[data-focus="swap-${index}-${slot}"]`);
+    toast(swapped ? `${SLOTS[slot]} swapped.` : "That's every option for this piece. Starting the list over.");
+  },
+  shuffle(el) {
+    const index = Number(el.dataset.index);
+    outfits[index] = buildOutfit(index, outfits[index].silhouette);
+    render(`[data-focus="shuffle-${index}"]`);
+    toast(`Outfit ${index + 1} shuffled.`);
+  },
+  save(el) {
+    const index = Number(el.dataset.index);
+    const outfit = outfits[index];
+    if (outfit.savedId) {
+      saved = saved.filter(s => s.id !== outfit.savedId);
+      outfit.savedId = null;
+      toast("Removed from saved.");
+    } else {
+      outfit.savedId = nextId++;
+      saved.push({ id: outfit.savedId, label: saveLabel(outfit) });
+      toast("Saved for this session.");
+    }
+    render(`[data-focus="save-${index}"]`);
+  },
+  unsave(el) {
+    const id = Number(el.dataset.id);
+    saved = saved.filter(s => s.id !== id);
+    outfits.forEach(o => { if (o.savedId === id) o.savedId = null; });
+    render(".results-title");
+    toast("Removed from saved.");
+  },
+  dislike(el) {
+    const index = Number(el.dataset.index);
+    openFeedback = openFeedback === index ? null : index;
+    render(openFeedback === index ? `[data-focus="reason-${index}"]` : `[data-focus="dislike-${index}"]`);
+  },
+  "dislike-cancel"(el) {
+    const index = Number(el.dataset.index);
+    openFeedback = null;
+    render(`[data-focus="dislike-${index}"]`);
+  },
+  reason(el) {
+    const index = Number(el.dataset.index);
+    const message = applyFeedback(index, el.dataset.reason);
+    render(`#outfit-title-${index}`);
+    toast(message);
+  }
+};
+
+document.addEventListener("click", event => {
+  const el = event.target.closest("[data-action]");
+  if (el) actions[el.dataset.action](el);
+});
+
+/* Follows the device setting until the customer chooses. The choice isn't stored. */
+function paintTheme(dark) {
+  document.getElementById("themeBtn").textContent = dark ? "Light mode" : "Dark mode";
+}
+paintTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+render();
+</script>
+</body>
+</html>
