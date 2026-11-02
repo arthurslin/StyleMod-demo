@@ -10,20 +10,20 @@
     color-scheme: light;
     --on-ink: #fff;
     --on-accent: #fff;
-    --soft-ink: #4d4238;
+    --soft-ink: #3a4438;
     --hover: #fff;
-    --lay: #efe7da;
-    --swatch-line: rgba(33, 28, 24, .25);
-    --bg: #f7f2ea;
-    --surface: #fffdf9;
-    --sunken: #efe7da;
-    --ink: #211c18;
-    --muted: #5c534a;
-    --line: #d9cfc0;
-    --line-strong: #85796b;
-    --accent: #9a3412;
-    --accent-dark: #7c2a0e;
-    --accent-soft: #f6e4d8;
+    --lay: #eae5d9;
+    --swatch-line: rgba(42, 52, 41, .25);
+    --bg: #f4f1ea;
+    --surface: #fbf9f4;
+    --sunken: #eae5d9;
+    --ink: #2a3429;
+    --muted: #535a4e;
+    --line: #d5cfc0;
+    --line-strong: #7e7f6f;
+    --accent: #3f5a3c;
+    --accent-dark: #2a3429;
+    --accent-soft: #e3e6d6;
     --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --radius: 10px;
@@ -31,16 +31,16 @@
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --bg: #1a1714; --surface: #24201c; --sunken: #2e2924; --ink: #f4eee5; --muted: #bdb2a4;
-      --line: #40392f; --line-strong: #8f8475; --accent: #f0a27c; --accent-dark: #f8c3a7; --accent-soft: #40281c;
-      --on-ink: #1a1714; --on-accent: #2a1309; --soft-ink: #e6d8ca; --hover: #2e2924; --swatch-line: rgba(244, 238, 229, .35);
+      --bg: #171c16; --surface: #20261f; --sunken: #2a3129; --ink: #f4f1ea; --muted: #b9bdae;
+      --line: #3b4339; --line-strong: #868c7b; --accent: #b4c79a; --accent-dark: #d0ddbb; --accent-soft: #2f3b2b;
+      --on-ink: #171c16; --on-accent: #1a2118; --soft-ink: #dde0d0; --hover: #2a3129; --swatch-line: rgba(244, 241, 234, .35);
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --bg: #1a1714; --surface: #24201c; --sunken: #2e2924; --ink: #f4eee5; --muted: #bdb2a4;
-      --line: #40392f; --line-strong: #8f8475; --accent: #f0a27c; --accent-dark: #f8c3a7; --accent-soft: #40281c;
-      --on-ink: #1a1714; --on-accent: #2a1309; --soft-ink: #e6d8ca; --hover: #2e2924; --swatch-line: rgba(244, 238, 229, .35);
+    --bg: #171c16; --surface: #20261f; --sunken: #2a3129; --ink: #f4f1ea; --muted: #b9bdae;
+      --line: #3b4339; --line-strong: #868c7b; --accent: #b4c79a; --accent-dark: #d0ddbb; --accent-soft: #2f3b2b;
+      --on-ink: #171c16; --on-accent: #1a2118; --soft-ink: #dde0d0; --hover: #2a3129; --swatch-line: rgba(244, 241, 234, .35);
   }
   *, *::before, *::after { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
@@ -63,6 +63,7 @@
   .brand { font-family: var(--serif); font-size: 1.3rem; letter-spacing: .01em; }
   .brand b { font-weight: 500; color: var(--accent); }
   .tag { font-size: .8rem; color: var(--muted); text-align: right; }
+  a { color: var(--accent); }
   .site-foot { border-top: 1px solid var(--line); margin-top: 48px; color: var(--muted); font-size: .85rem; }
 
   main { padding: 0 16px; }
@@ -192,8 +193,13 @@
   .card-title { font-size: 1.5rem; margin-top: 2px; }
   .total { font-family: var(--serif); font-size: 1.3rem; white-space: nowrap; }
   .card-grid { display: grid; gap: 18px; }
-  .lay { background: var(--lay); border-radius: var(--radius); padding: 10px; }
-  .lay svg { display: block; width: 100%; max-width: 330px; height: auto; margin: 0 auto; }
+  .lay { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tile { position: relative; margin: 0; border-radius: var(--radius); overflow: hidden; background: var(--sunken); }
+  .tile img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; }
+  .tile figcaption { position: absolute; left: 6px; bottom: 6px; display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 4px; border-radius: 999px; background: var(--surface); color: var(--ink); font-size: .78rem; }
+  .tile figcaption i { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--swatch-line); }
+  .trends ul { margin: 8px 0 0; padding-left: 20px; }
+  .trends li + li { margin-top: 6px; }
   .strip { display: flex; height: 34px; border-radius: 6px; overflow: hidden; margin-top: 14px; border: 1px solid var(--swatch-line); }
   .strip i { flex: 1; }
   .strip-key { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: .85rem; color: var(--muted); margin-top: 6px; }
@@ -238,7 +244,7 @@
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
   dialog { border: 0; border-radius: 14px; padding: 22px; max-width: min(420px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); }
-  dialog::backdrop { background: rgba(33, 28, 24, .5); }
+  dialog::backdrop { background: rgba(42, 52, 41, .5); }
   dialog h2 { font-size: 1.4rem; margin-bottom: 6px; }
   dialog .nav { margin-top: 18px; justify-content: flex-end; }
 
@@ -249,6 +255,9 @@
   @media (max-width: 479px) {
     .tag { display: none; }
     .brand { font-size: 1.1rem; white-space: nowrap; }
+  }
+  @media (min-width: 560px) and (max-width: 879px) {
+    .lay { grid-template-columns: repeat(4, 1fr); }
   }
   @media (min-width: 640px) {
     .card { padding: 22px; }
@@ -281,7 +290,7 @@
 
 <footer class="site-foot">
   <div class="site-foot-in">
-    <p>Theoretical product for a marketing case study on responsible Gen AI personalization. Everything runs in this browser tab and disappears when you close it. Brand names are illustrative mock data, with no affiliation or endorsement.</p>
+    <p>Theoretical product for a marketing case study on responsible Gen AI personalization. Everything runs in this browser tab and disappears when you close it. Brand names are illustrative mock data, with no affiliation or endorsement. Photos are style examples from Unsplash, not the listed products, and the people in them don't endorse StyleMod. <a href="credits.html">Photo credits</a>.</p>
   </div>
 </footer>
 
@@ -333,6 +342,7 @@ const OCCASIONS = {
   work:       "Work / smart casual",
   night:      "Night out",
   athleisure: "Athleisure",
+  gym:        "Gym / training",
   weekend:    "Weekend / travel"
 };
 
@@ -358,7 +368,8 @@ const SILHOUETTES = {
 const PREFS = {
   sustainable: { label: "Sustainable materials", desc: "Favor organic, recycled or lower-impact fabrics" },
   durable:     { label: "Made to last",          desc: "Favor sturdy construction and timeless cuts" },
-  trend:       { label: "Trend-forward",         desc: "Favor newer shapes and details" }
+  trend:       { label: "Trend-forward",         desc: "Favor what's showing up on runways, streets and gym floors now" },
+  kstyle:      { label: "Korean street style",   desc: "Favor Seoul-led shapes: wide legs, long hems and easy layers" }
 };
 
 const TIERS = { value: "Value", mid: "Mid-range", premium: "Premium" };
@@ -378,51 +389,96 @@ const EVEN = ["balanced"];
 /* Tagged by color (colors), fit, silhouette (sil) and, once expanded below, price tier. */
 const STYLES = [
   // Tops
-  { id: "crop-tee",   slot: "top", name: "fitted cropped tee", shape: "crop",   fit: "slim", sil: SMALL_TOP, occ: ["casual", "night", "weekend"], dept: W, base: 40, colors: ALL, material: "organic cotton", tags: ["sustainable", "trend"] },
-  { id: "rib-tee",    slot: "top", name: "fitted rib tee", shape: "tee",        fit: "slim", sil: SMALL_TOP, occ: ["casual", "night", "weekend"], dept: BOTH, base: 40, colors: ALL, material: "cotton-modal rib", tags: [] },
-  { id: "rib-tank",   slot: "top", name: "ribbed tank", shape: "tank",          fit: "slim", sil: SMALL_TOP, occ: ["casual", "night", "athleisure"], dept: BOTH, base: 30, colors: ALL, material: "recycled-blend rib", tags: ["sustainable"] },
-  { id: "knit-polo",  slot: "top", name: "fitted knit polo", shape: "tee",      fit: "slim", sil: SMALL_TOP, occ: ["work", "night"], dept: BOTH, base: 65, colors: ALL, material: "fine merino", tags: ["durable"], detail: "collar" },
-  { id: "tech-tee",   slot: "top", name: "performance tee", shape: "tee",       fit: "slim", sil: SMALL_TOP, occ: ["athleisure"], dept: BOTH, base: 45, colors: ALL, material: "recycled polyester", tags: ["sustainable"] },
-  { id: "crew-tee",   slot: "top", name: "classic crew tee", shape: "regtee",   fit: "regular", sil: EVEN, occ: ["casual", "weekend", "athleisure"], dept: BOTH, base: 35, colors: ALL, material: "heavyweight organic cotton", tags: ["sustainable", "durable"] },
-  { id: "oxford",     slot: "top", name: "oxford shirt", shape: "shirt",        fit: "regular", sil: EVEN, occ: ["work", "weekend"], dept: BOTH, base: 70, colors: ALL, material: "cotton oxford cloth", tags: ["durable"], detail: "placket" },
-  { id: "fine-knit",  slot: "top", name: "fine-gauge sweater", shape: "knit",   fit: "regular", sil: EVEN, occ: ["work", "casual"], dept: BOTH, base: 75, colors: ALL, material: "merino wool", tags: ["durable"] },
-  { id: "camp-shirt", slot: "top", name: "camp-collar shirt", shape: "regtee",  fit: "regular", sil: EVEN, occ: ["night", "weekend"], dept: BOTH, base: 60, colors: ALL, material: "TENCEL lyocell", tags: ["sustainable", "trend"], detail: "placket" },
-  { id: "drape-top",  slot: "top", name: "drapey blouse", shape: "shirt",       fit: "regular", sil: EVEN, occ: ["work", "night"], dept: W, base: 65, colors: ALL, material: "satin-finish viscose", tags: [], detail: "placket" },
-  { id: "over-tee",   slot: "top", name: "oversized tee", shape: "overtee",     fit: "relaxed", sil: BIG_TOP, occ: ["casual", "weekend", "night"], dept: BOTH, base: 40, colors: ALL, material: "organic cotton", tags: ["sustainable", "trend"] },
-  { id: "boxy-sweat", slot: "top", name: "boxy sweatshirt", shape: "sweat",     fit: "relaxed", sil: BIG_TOP, occ: ["casual", "athleisure", "weekend"], dept: BOTH, base: 60, colors: ALL, material: "recycled-cotton fleece", tags: ["sustainable", "durable"] },
-  { id: "chunky-knit",slot: "top", name: "chunky knit sweater", shape: "sweat", fit: "relaxed", sil: BIG_TOP, occ: ["casual", "work", "weekend"], dept: BOTH, base: 90, colors: ALL, material: "lambswool", tags: ["durable"] },
-  { id: "big-shirt",  slot: "top", name: "oversized poplin shirt", shape: "bigshirt", fit: "relaxed", sil: BIG_TOP, occ: ["work", "night"], dept: BOTH, base: 65, colors: ALL, material: "organic cotton poplin", tags: ["sustainable", "trend"], detail: "placket" },
+  { id: "crop-tee",   slot: "top", name: "fitted cropped tee", fit: "slim", sil: SMALL_TOP, occ: ["casual", "night", "weekend"], dept: W, base: 40, colors: ALL, material: "organic cotton", tags: ["sustainable", "trend"] },
+  { id: "rib-tee",    slot: "top", name: "fitted rib tee", fit: "slim", sil: SMALL_TOP, occ: ["casual", "night", "weekend"], dept: BOTH, base: 40, colors: ALL, material: "cotton-modal rib", tags: [] },
+  { id: "rib-tank",   slot: "top", name: "ribbed tank", fit: "slim", sil: SMALL_TOP, occ: ["gym", "casual", "night", "athleisure"], dept: BOTH, base: 30, colors: ALL, material: "recycled-blend rib", tags: ["sustainable"] },
+  { id: "knit-polo",  slot: "top", name: "fitted knit polo", fit: "slim", sil: SMALL_TOP, occ: ["work", "night"], dept: BOTH, base: 65, colors: ALL, material: "fine merino", tags: ["durable"] },
+  { id: "tech-tee",   slot: "top", name: "performance tee", fit: "slim", sil: SMALL_TOP, occ: ["gym", "athleisure"], dept: BOTH, base: 45, colors: ALL, material: "recycled polyester", tags: ["sustainable"] },
+  { id: "crew-tee",   slot: "top", name: "classic crew tee", fit: "regular", sil: EVEN, occ: ["gym", "casual", "weekend", "athleisure"], dept: BOTH, base: 35, colors: ALL, material: "heavyweight organic cotton", tags: ["sustainable", "durable"] },
+  { id: "oxford",     slot: "top", name: "oxford shirt", fit: "regular", sil: EVEN, occ: ["work", "weekend"], dept: BOTH, base: 70, colors: ALL, material: "cotton oxford cloth", tags: ["durable"] },
+  { id: "fine-knit",  slot: "top", name: "fine-gauge sweater", fit: "regular", sil: EVEN, occ: ["work", "casual"], dept: BOTH, base: 75, colors: ALL, material: "merino wool", tags: ["durable"] },
+  { id: "camp-shirt", slot: "top", name: "camp-collar shirt", fit: "regular", sil: EVEN, occ: ["night", "weekend"], dept: BOTH, base: 60, colors: ALL, material: "TENCEL lyocell", tags: ["sustainable", "trend"] },
+  { id: "drape-top",  slot: "top", name: "drapey blouse", fit: "regular", sil: EVEN, occ: ["work", "night"], dept: W, base: 65, colors: ALL, material: "satin-finish viscose", tags: [] },
+  { id: "over-tee",   slot: "top", name: "oversized tee", fit: "relaxed", sil: BIG_TOP, occ: ["gym", "casual", "weekend", "night"], dept: BOTH, base: 40, colors: ALL, material: "organic cotton", tags: ["sustainable", "trend"] },
+  { id: "boxy-sweat", slot: "top", name: "boxy sweatshirt", fit: "relaxed", sil: BIG_TOP, occ: ["gym", "casual", "athleisure", "weekend"], dept: BOTH, base: 60, colors: ALL, material: "recycled-cotton fleece", tags: ["sustainable", "durable"] },
+  { id: "chunky-knit",slot: "top", name: "chunky knit sweater", fit: "relaxed", sil: BIG_TOP, occ: ["casual", "work", "weekend"], dept: BOTH, base: 90, colors: ALL, material: "lambswool", tags: ["durable"] },
+  { id: "big-shirt",  slot: "top", name: "oversized poplin shirt", fit: "relaxed", sil: BIG_TOP, occ: ["work", "night"], dept: BOTH, base: 65, colors: ALL, material: "organic cotton poplin", tags: ["sustainable", "trend"] },
+
+  { id: "train-tank", slot: "top", name: "second-skin training tank", fit: "slim", sil: SMALL_TOP, occ: ["gym", "athleisure"], dept: BOTH, base: 40, colors: ALL, material: "recycled nylon blend", tags: ["sustainable"] },
+  { id: "peplum",     slot: "top", name: "peplum top", fit: "slim", sil: SMALL_TOP, occ: ["work", "night"], dept: W, base: 65, colors: ALL, material: "cotton poplin", tags: [] },
+  { id: "crinkle-shirt", slot: "top", name: "crinkle-texture shirt", fit: "regular", sil: EVEN, occ: ["work", "weekend", "night"], dept: BOTH, base: 65, colors: ALL, material: "crinkled cotton", tags: [] },
+  { id: "pump-cover", slot: "top", name: "boxy gym tee", fit: "relaxed", sil: BIG_TOP, occ: ["gym", "athleisure", "casual"], dept: BOTH, base: 40, colors: ALL, material: "heavyweight cotton", tags: ["durable"] },
 
   // Bottoms
-  { id: "slim-chino", slot: "bottom", name: "slim chinos", shape: "slim",       fit: "slim", sil: BIG_TOP, occ: ["work", "casual"], dept: BOTH, base: 65, colors: ALL, material: "stretch cotton twill", tags: ["durable"] },
-  { id: "slim-jean",  slot: "bottom", name: "slim jeans", shape: "slim",        fit: "slim", sil: BIG_TOP, occ: ["casual", "night", "weekend"], dept: BOTH, base: 70, colors: ["black", "navy", "slate", "grey"], material: "recycled-cotton denim", tags: ["sustainable", "durable"] },
-  { id: "cig-pant",   slot: "bottom", name: "tailored narrow trousers", shape: "slim", fit: "slim", sil: BIG_TOP, occ: ["work", "night"], dept: BOTH, base: 85, colors: ALL, material: "wool blend", tags: ["durable"] },
-  { id: "tapered-jog",slot: "bottom", name: "tapered joggers", shape: "slim",   fit: "slim", sil: BIG_TOP, occ: ["athleisure", "weekend"], dept: BOTH, base: 55, colors: ALL, material: "recycled-poly knit", tags: ["sustainable"] },
-  { id: "str-jean",   slot: "bottom", name: "straight jeans", shape: "straight",fit: "regular", sil: EVEN, occ: ["casual", "weekend", "night"], dept: BOTH, base: 70, colors: ["black", "navy", "slate", "grey", "white"], material: "organic-cotton denim", tags: ["sustainable", "durable"] },
-  { id: "str-pant",   slot: "bottom", name: "straight trousers", shape: "straight", fit: "regular", sil: EVEN, occ: ["work", "night"], dept: BOTH, base: 80, colors: ALL, material: "wool-blend twill", tags: ["durable"] },
-  { id: "track-pant", slot: "bottom", name: "straight track pants", shape: "straight", fit: "regular", sil: EVEN, occ: ["athleisure", "weekend"], dept: BOTH, base: 55, colors: ALL, material: "recycled nylon", tags: ["sustainable", "trend"] },
-  { id: "midi-skirt", slot: "bottom", name: "midi slip skirt", shape: "skirt",  fit: "regular", sil: EVEN, occ: ["work", "night"], dept: W, base: 65, colors: ALL, material: "satin-finish viscose", tags: ["trend"] },
-  { id: "wide-pant",  slot: "bottom", name: "wide-leg trousers", shape: "wide", fit: "relaxed", sil: SMALL_TOP, occ: ["work", "night", "casual"], dept: BOTH, base: 85, colors: ALL, material: "fluid TENCEL blend", tags: ["sustainable", "trend"] },
-  { id: "cargo",      slot: "bottom", name: "relaxed cargo pants", shape: "cargo", fit: "relaxed", sil: SMALL_TOP, occ: ["casual", "weekend", "night"], dept: BOTH, base: 75, colors: ALL, material: "organic cotton ripstop", tags: ["sustainable", "durable", "trend"] },
-  { id: "wide-jean",  slot: "bottom", name: "wide-leg jeans", shape: "wide",    fit: "relaxed", sil: SMALL_TOP, occ: ["casual", "night", "weekend"], dept: BOTH, base: 75, colors: ["black", "navy", "slate", "white"], material: "rigid cotton denim", tags: ["durable", "trend"] },
-  { id: "wide-sweat", slot: "bottom", name: "wide sweatpants", shape: "wide",   fit: "relaxed", sil: SMALL_TOP, occ: ["athleisure", "weekend"], dept: BOTH, base: 55, colors: ALL, material: "recycled-cotton fleece", tags: ["sustainable"] },
+  { id: "slim-chino", slot: "bottom", name: "slim chinos", fit: "slim", sil: BIG_TOP, occ: ["work", "casual"], dept: BOTH, base: 65, colors: ALL, material: "stretch cotton twill", tags: ["durable"] },
+  { id: "slim-jean",  slot: "bottom", name: "slim jeans", fit: "slim", sil: BIG_TOP, occ: ["casual", "night", "weekend"], dept: BOTH, base: 70, colors: ["black", "navy", "slate", "grey"], material: "recycled-cotton denim", tags: ["sustainable", "durable"] },
+  { id: "cig-pant",   slot: "bottom", name: "tailored narrow trousers", fit: "slim", sil: BIG_TOP, occ: ["work", "night"], dept: BOTH, base: 85, colors: ALL, material: "wool blend", tags: ["durable"] },
+  { id: "tapered-jog",slot: "bottom", name: "tapered joggers", fit: "slim", sil: BIG_TOP, occ: ["gym", "athleisure", "weekend"], dept: BOTH, base: 55, colors: ALL, material: "recycled-poly knit", tags: ["sustainable"] },
+  { id: "str-jean",   slot: "bottom", name: "straight jeans", fit: "regular", sil: EVEN, occ: ["casual", "weekend", "night"], dept: BOTH, base: 70, colors: ["black", "navy", "slate", "grey", "white"], material: "organic-cotton denim", tags: ["sustainable", "durable"] },
+  { id: "str-pant",   slot: "bottom", name: "straight trousers", fit: "regular", sil: EVEN, occ: ["work", "night"], dept: BOTH, base: 80, colors: ALL, material: "wool-blend twill", tags: ["durable"] },
+  { id: "track-pant", slot: "bottom", name: "straight track pants", fit: "regular", sil: EVEN, occ: ["gym", "athleisure", "weekend"], dept: BOTH, base: 55, colors: ALL, material: "recycled nylon", tags: ["sustainable", "trend"] },
+  { id: "midi-skirt", slot: "bottom", name: "midi slip skirt", fit: "regular", sil: EVEN, occ: ["work", "night"], dept: W, base: 65, colors: ALL, material: "satin-finish viscose", tags: ["trend"] },
+  { id: "wide-pant",  slot: "bottom", name: "wide-leg trousers", fit: "relaxed", sil: SMALL_TOP, occ: ["work", "night", "casual"], dept: BOTH, base: 85, colors: ALL, material: "fluid TENCEL blend", tags: ["sustainable", "trend"] },
+  { id: "cargo",      slot: "bottom", name: "relaxed cargo pants", fit: "relaxed", sil: SMALL_TOP, occ: ["casual", "weekend", "night"], dept: BOTH, base: 75, colors: ALL, material: "organic cotton ripstop", tags: ["sustainable", "durable", "trend"] },
+  { id: "wide-jean",  slot: "bottom", name: "wide-leg jeans", fit: "relaxed", sil: SMALL_TOP, occ: ["casual", "night", "weekend"], dept: BOTH, base: 75, colors: ["black", "navy", "slate", "white"], material: "rigid cotton denim", tags: ["durable", "trend"] },
+  { id: "wide-sweat", slot: "bottom", name: "wide sweatpants", fit: "relaxed", sil: SMALL_TOP, occ: ["gym", "athleisure", "weekend"], dept: BOTH, base: 55, colors: ALL, material: "recycled-cotton fleece", tags: ["sustainable"] },
+
+  { id: "flare-legging", slot: "bottom", name: "flared leggings", fit: "slim", sil: BIG_TOP, occ: ["gym", "athleisure"], dept: W, base: 65, colors: ["black", "grey", "navy", "slate", "olive", "rust"], material: "recycled nylon jersey", tags: ["sustainable"] },
+  { id: "maxi-skirt", slot: "bottom", name: "long column skirt", fit: "regular", sil: EVEN, occ: ["casual", "night", "work"], dept: W, base: 70, colors: ALL, material: "crinkled viscose", tags: [] },
+  { id: "pleat-wide", slot: "bottom", name: "pleated wide trousers", fit: "relaxed", sil: SMALL_TOP, occ: ["work", "night", "casual"], dept: BOTH, base: 85, colors: ALL, material: "fluid crepe", tags: [] },
+  { id: "parachute",  slot: "bottom", name: "parachute pants", fit: "relaxed", sil: SMALL_TOP, occ: ["casual", "night", "weekend"], dept: BOTH, base: 75, colors: ALL, material: "recycled nylon", tags: ["sustainable"] },
+  { id: "gym-short",  slot: "bottom", name: "loose training shorts", fit: "relaxed", sil: SMALL_TOP, occ: ["gym", "athleisure"], dept: BOTH, base: 40, colors: ["black", "grey", "navy", "slate", "olive", "red", "cobalt"], material: "recycled polyester", tags: ["sustainable"] },
 
   // Shoes
-  { id: "chunky-snk", slot: "shoes", name: "chunky sneakers", shape: "chunky",  fit: "regular", sil: ["small-top", "balanced", "big-top"], occ: ["casual", "night", "weekend", "athleisure"], dept: BOTH, base: 95, colors: SHOE_COLORS, material: "recycled mesh and leather", tags: ["sustainable", "trend"], note: "add visual weight at the hem with their thicker sole" },
-  { id: "low-snk",    slot: "shoes", name: "low-top sneakers", shape: "sneaker",fit: "regular", sil: ["balanced", "big-top"], occ: ["casual", "weekend", "work"], dept: BOTH, base: 80, colors: SHOE_COLORS, material: "vegetable-tanned leather", tags: ["durable"], note: "keep the line simple with a clean, low profile" },
-  { id: "runner",     slot: "shoes", name: "lightweight runners", shape: "sneaker", fit: "regular", sil: ["balanced", "big-top", "small-top"], occ: ["athleisure", "weekend"], dept: BOTH, base: 90, colors: SHOE_COLORS, material: "recycled knit", tags: ["sustainable"], note: "keep the outfit light and easy to move in" },
-  { id: "loafer",     slot: "shoes", name: "leather loafers", shape: "loafer",  fit: "regular", sil: ["balanced", "big-top", "small-top"], occ: ["work", "night"], dept: BOTH, base: 110, colors: ["black", "camel", "rust", "navy"], material: "full-grain leather", tags: ["durable"], note: "finish the outfit with a low, polished shape" },
-  { id: "chelsea",    slot: "shoes", name: "Chelsea boots", shape: "boot",      fit: "regular", sil: ["balanced", "big-top"], occ: ["work", "night", "weekend"], dept: BOTH, base: 125, colors: ["black", "camel", "rust", "grey"], material: "resoleable leather", tags: ["durable"], note: "give the leg line a clean finish at the ankle" },
-  { id: "strap-heel", slot: "shoes", name: "block-heel sandals", shape: "heel", fit: "regular", sil: ["small-top", "balanced"], occ: ["night", "work"], dept: W, base: 95, colors: ["black", "beige", "camel", "red"], material: "leather", tags: ["trend"], note: "add a little height under the hem" },
+  { id: "chunky-snk", slot: "shoes", name: "chunky sneakers", fit: "regular", sil: ["small-top", "balanced", "big-top"], occ: ["gym", "casual", "night", "weekend", "athleisure"], dept: BOTH, base: 95, colors: SHOE_COLORS, material: "recycled mesh and leather", tags: ["sustainable", "trend"], note: "add visual weight at the hem with their thicker sole" },
+  { id: "low-snk",    slot: "shoes", name: "low-top sneakers", fit: "regular", sil: ["balanced", "big-top"], occ: ["casual", "weekend", "work"], dept: BOTH, base: 80, colors: SHOE_COLORS, material: "vegetable-tanned leather", tags: ["durable"], note: "keep the line simple with a clean, low profile" },
+  { id: "runner",     slot: "shoes", name: "lightweight runners", fit: "regular", sil: ["balanced", "big-top", "small-top"], occ: ["gym", "athleisure", "weekend"], dept: BOTH, base: 90, colors: SHOE_COLORS, material: "recycled knit", tags: ["sustainable"], note: "keep the outfit light and easy to move in" },
+  { id: "loafer",     slot: "shoes", name: "leather loafers", fit: "regular", sil: ["balanced", "big-top", "small-top"], occ: ["work", "night"], dept: BOTH, base: 110, colors: ["black", "camel", "rust", "navy"], material: "full-grain leather", tags: ["durable"], note: "finish the outfit with a low, polished shape" },
+  { id: "chelsea",    slot: "shoes", name: "Chelsea boots", fit: "regular", sil: ["balanced", "big-top"], occ: ["work", "night", "weekend"], dept: BOTH, base: 125, colors: ["black", "camel", "rust", "grey"], material: "resoleable leather", tags: ["durable"], note: "give the leg line a clean finish at the ankle" },
+  { id: "strap-heel", slot: "shoes", name: "block-heel sandals", fit: "regular", sil: ["small-top", "balanced"], occ: ["night", "work"], dept: W, base: 95, colors: ["black", "beige", "camel", "red"], material: "leather", tags: ["trend"], note: "add a little height under the hem" },
 
   // Layers and accessories
-  { id: "blazer",     slot: "layer", name: "unstructured blazer", shape: "jacket", fit: "regular", sil: EVEN, occ: ["work", "night"], dept: BOTH, base: 130, colors: LAYER_COLORS, material: "linen-wool blend", tags: ["durable"] },
-  { id: "chore",      slot: "layer", name: "chore jacket", shape: "jacket",     fit: "regular", sil: EVEN, occ: ["casual", "weekend"], dept: BOTH, base: 90, colors: LAYER_COLORS, material: "organic cotton canvas", tags: ["sustainable", "durable"] },
-  { id: "track-top",  slot: "layer", name: "zip track jacket", shape: "jacket", fit: "regular", sil: EVEN, occ: ["athleisure", "weekend"], dept: BOTH, base: 70, colors: LAYER_COLORS, material: "recycled polyester", tags: ["sustainable", "trend"] },
-  { id: "crossbody",  slot: "layer", name: "crossbody bag", shape: "bag",       fit: "regular", sil: EVEN, occ: ["casual", "night", "weekend", "work"], dept: BOTH, base: 60, colors: LAYER_COLORS, material: "recycled nylon", tags: ["sustainable", "trend"] },
-  { id: "scarf",      slot: "layer", name: "wool scarf", shape: "scarf",        fit: "regular", sil: EVEN, occ: ["work", "weekend", "casual"], dept: BOTH, base: 40, colors: LAYER_COLORS, material: "recycled wool", tags: ["sustainable", "durable"] },
-  { id: "cap",        slot: "layer", name: "six-panel cap", shape: "cap",       fit: "regular", sil: EVEN, occ: ["athleisure", "casual", "weekend"], dept: BOTH, base: 28, colors: LAYER_COLORS, material: "organic cotton twill", tags: ["sustainable"] }
+  { id: "blazer",     slot: "layer", name: "unstructured blazer", fit: "regular", sil: EVEN, occ: ["work", "night"], dept: BOTH, base: 130, colors: LAYER_COLORS, material: "linen-wool blend", tags: ["durable"] },
+  { id: "chore",      slot: "layer", name: "chore jacket", fit: "regular", sil: EVEN, occ: ["casual", "weekend"], dept: BOTH, base: 90, colors: LAYER_COLORS, material: "organic cotton canvas", tags: ["sustainable", "durable"] },
+  { id: "track-top",  slot: "layer", name: "zip track jacket", fit: "regular", sil: EVEN, occ: ["gym", "athleisure", "weekend"], dept: BOTH, base: 70, colors: LAYER_COLORS, material: "recycled polyester", tags: ["sustainable", "trend"] },
+  { id: "power-blazer", slot: "layer", name: "strong-shoulder blazer", fit: "regular", sil: EVEN, occ: ["work", "night"], dept: BOTH, base: 140, colors: LAYER_COLORS, material: "wool blend", tags: ["durable"] },
+  { id: "trench",     slot: "layer", name: "slouchy trench coat", fit: "regular", sil: EVEN, occ: ["work", "casual", "weekend"], dept: BOTH, base: 150, colors: ["beige", "camel", "black", "olive", "navy"], material: "cotton gabardine", tags: ["durable"] },
+  { id: "crop-puffer", slot: "layer", name: "cropped puffer jacket", fit: "regular", sil: EVEN, occ: ["casual", "weekend"], dept: BOTH, base: 110, colors: LAYER_COLORS, material: "recycled down", tags: ["sustainable"] },
+  { id: "tote",       slot: "layer", name: "slouchy tote bag", fit: "regular", sil: EVEN, occ: ["casual", "work", "weekend"], dept: BOTH, base: 55, colors: LAYER_COLORS, material: "organic cotton canvas", tags: ["sustainable"] },
+  { id: "beanie",     slot: "layer", name: "ribbed beanie", fit: "regular", sil: EVEN, occ: ["casual", "weekend"], dept: BOTH, base: 25, colors: LAYER_COLORS, material: "recycled wool", tags: ["sustainable"] },
+  { id: "crossbody",  slot: "layer", name: "crossbody bag", fit: "regular", sil: EVEN, occ: ["casual", "night", "weekend", "work"], dept: BOTH, base: 60, colors: LAYER_COLORS, material: "recycled nylon", tags: ["sustainable", "trend"] },
+  { id: "scarf",      slot: "layer", name: "wool scarf", fit: "regular", sil: EVEN, occ: ["work", "weekend", "casual"], dept: BOTH, base: 40, colors: LAYER_COLORS, material: "recycled wool", tags: ["sustainable", "durable"] },
+  { id: "cap",        slot: "layer", name: "six-panel cap", fit: "regular", sil: EVEN, occ: ["gym", "athleisure", "casual", "weekend"], dept: BOTH, base: 28, colors: LAYER_COLORS, material: "organic cotton twill", tags: ["sustainable"] }
 ];
+
+/* What's showing up now, as of November 2026. GEN AI PLUG-IN POINT: a real system
+   would refresh this from a maintained trend feed, reviewed by a merchandiser.
+   k marks pieces tied to Korean street style. */
+const TRENDS = {
+  "wide-pant":     { k: true, note: "Wide legs are the defining K-fashion shape this year" },
+  "pleat-wide":    { k: true, note: "Structured, pleated wide trousers are a Korean staple right now" },
+  "parachute":     { k: true, note: "Relaxed parachute pants are a Musinsa favorite" },
+  "wide-jean":     { k: true, note: "Wide denim is a Seoul street staple" },
+  "cargo":         { k: true, note: "Cargos remain a key shape on Korean platforms" },
+  "trench":        { k: true, note: "Trench coats stood out at Seoul Fashion Week SS27, and models wear them slouchy off duty" },
+  "power-blazer":  { k: true, note: "Strong shoulders kept returning at Seoul Fashion Week SS27" },
+  "maxi-skirt":    { k: true, note: "Long hems were a repeat detail at Seoul Fashion Week SS27" },
+  "crinkle-shirt": { k: true, note: "Crinkled fabric was a repeat detail at Seoul Fashion Week SS27" },
+  "crop-puffer":   { k: true, note: "Shorter outerwear is a focus on Korean platforms" },
+  "beanie":        { k: true, note: "Beanies are a steady best-seller category in K-fashion" },
+  "tote":          { k: true, note: "Large, slouchy bags showed up at Seoul Fashion Week SS27" },
+  "peplum":        { note: "Peplum was the headline shape of the SS27 runways" },
+  "blazer":        { note: "A generous blazer is a core part of the model off-duty uniform" },
+  "crew-tee":      { note: "A clean white tee anchors the model off-duty formula" },
+  "str-jean":      { note: "Relaxed denim is the other half of the model off-duty formula" },
+  "over-tee":      { note: "Baggy tops over fitted bottoms are the current gym-floor look" },
+  "pump-cover":    { note: "Boxy tees over fitted pieces are the current gym-floor look" },
+  "boxy-sweat":    { note: "Oversized sweatshirts over fitted pieces are all over gyms now" },
+  "train-tank":    { note: "Second-skin tanks pair with baggy layers on the gym floor" },
+  "wide-sweat":    { note: "Baggy sweatpants with a fitted top lead current gym style" },
+  "flare-legging": { note: "Flares are taking over from skinny gym leggings" },
+  "gym-short":     { note: "Many younger gym-goers are swapping leggings for bigger shorts" }
+};
 
 /* One record per style + color + price tier. */
 const CATALOG = STYLES.flatMap(style => style.colors.flatMap(color => Object.keys(TIERS).map(tier => ({
@@ -432,8 +488,21 @@ const CATALOG = STYLES.flatMap(style => style.colors.flatMap(color => Object.key
   family: COLORS[color].family,
   tier,
   price: Math.round(style.base * TIER_MULT[tier]),
-  tags: tier === "premium" ? [...new Set([...style.tags, "durable"])] : style.tags
+  photo: `images/${style.id}.jpg`,
+  trendNote: TRENDS[style.id] ? TRENDS[style.id].note : "",
+  korean: !!(TRENDS[style.id] && TRENDS[style.id].k),
+  tags: [...new Set([
+    ...style.tags,
+    ...(tier === "premium" ? ["durable"] : []),
+    ...(TRENDS[style.id] ? ["trend"] : []),
+    ...(TRENDS[style.id] && TRENDS[style.id].k ? ["kstyle"] : [])
+  ])]
 }))));
+/* Style groups get their own illustrative brands. Same caveats as BRANDS. */
+const BRANDS_KOREAN = { value: "Musinsa Standard, 8Seconds, Spao", mid: "Covernat, thisisneverthat, Mardi Mercredi", premium: "Andersson Bell, Ader Error, Wooyoungmi" };
+const BRANDS_GYM = { value: "Old Navy, Decathlon, Uniqlo", mid: "Gymshark, Nike, Under Armour", premium: "Lululemon, Alo Yoga, Rhone" };
+const brandsFor = item => item.korean ? BRANDS_KOREAN : item.occ[0] === "gym" && item.slot !== "shoes" ? BRANDS_GYM : BRANDS[item.slot];
+
 const BY_KEY = new Map(CATALOG.map(item => [item.key, item]));
 
 /* Illustrative only: no claims about any brand's real price, stock or materials. */
@@ -451,7 +520,7 @@ const BRANDS = {
 const defaultAnswers = () => ({
   dept: "unisex", occasions: [], palettes: [], avoid: [],
   body: "unsure", fit: "regular", silhouette: "surprise",
-  budget: [100, 400], sustainable: false, durable: false, trend: false,
+  budget: [100, 400], sustainable: false, durable: false, trend: false, kstyle: false,
   consent: true
 });
 const emptyFeedback = () => ({ colors: {}, styles: {}, sils: [], log: [] });
@@ -514,6 +583,8 @@ function pool(slot, ctx) {
     return true;
   };
   const allowed = CATALOG.filter(item => matches(item) && !a.avoid.includes(item.color));
+  const forOccasion = allowed.filter(item => item.occ.includes(ctx.occasion));
+  if (forOccasion.length) return forOccasion;
   if (allowed.length) return allowed;
   ctx.relaxedAvoid = true;
   return CATALOG.filter(matches);
@@ -544,6 +615,7 @@ function score(item, ctx) {
   if (ctx.tier === "value") total -= item.price / 12;
   Object.keys(PREFS).forEach(pref => { if (a[pref] && item.tags.includes(pref)) total += 2; });
   if (item.id === "chunky-snk" && ctx.silhouette === "small-top") total += 2;
+  if (a.trend && item.color === "cobalt") total += 1;
 
   total -= 8 * (feedback.colors[item.color] || 0);
   total -= 8 * (feedback.styles[item.id] || 0);
@@ -771,7 +843,8 @@ function detailsText(outfit, a) {
     if (!match) return;
     if (pref === "sustainable") parts.push(`For sustainable materials: the ${match.name} uses ${match.material} (mock data).`);
     if (pref === "durable") parts.push(`For made to last: the ${match.name} is built from ${match.material} (mock data).`);
-    if (pref === "trend") parts.push(`For trend-forward: the ${match.name} brings in a newer shape.`);
+    if (pref === "trend") parts.push(`For trend-forward: the ${match.name}. ${match.trendNote || "It brings in a newer shape"}.`);
+    if (pref === "kstyle") parts.push(`For Korean street style: the ${match.name}. ${match.trendNote || "It suits the Seoul look"}.`);
   });
   return parts.join(" ");
 }
@@ -781,7 +854,9 @@ function buildWhy(outfit) {
     return [`${proportionText(outfit)}`, `${colorStory(outfit)} This is a general pick and doesn't use your answers.`];
   }
   const a = activeAnswers();
-  return [proportionText(outfit), colorText(outfit, a), detailsText(outfit, a)];
+  const onTrend = Object.values(outfit.items).find(i => i && i.trendNote);
+  const trendLine = onTrend && !a.trend && !a.kstyle ? ` On trend: ${onTrend.trendNote.charAt(0).toLowerCase()}${onTrend.trendNote.slice(1)}.` : "";
+  return [proportionText(outfit), colorText(outfit, a), detailsText(outfit, a) + trendLine];
 }
 
 /* Body type changes only these notes. It never filters or ranks products. */
@@ -813,101 +888,14 @@ function fitNotes(outfit) {
   return notes;
 }
 
-/* ==========================================================================
-   FLAT ILLUSTRATIONS (inline SVG, no photos or logos)
-   ========================================================================== */
-
-function shade(hex, amount) {
-  const value = parseInt(hex.slice(1), 16);
-  const channel = shift => Math.max(0, Math.min(255, Math.round(((value >> shift) & 255) * (1 + amount))));
-  return `rgb(${channel(16)},${channel(8)},${channel(0)})`;
-}
-const lineFor = hex => {
-  const value = parseInt(hex.slice(1), 16);
-  const light = ((value >> 16) & 255) + ((value >> 8) & 255) + (value & 255) > 390;
-  return light ? shade(hex, -0.32) : shade(hex, 0.5);
-};
-
-const CX = 118, TOP_Y = 26, WAIST = 128, HEM = 352;
-
-function drawTop(item) {
-  const hex = COLORS[item.color].hex, line = lineFor(hex);
-  const dims = {
-    crop: [37, 102, 18, 44], tee: [38, 124, 20, 46], regtee: [45, 130, 24, 50],
-    shirt: [45, 134, 26, 116], knit: [45, 130, 26, 116], overtee: [59, 148, 30, 60],
-    sweat: [59, 140, 30, 120], bigshirt: [59, 150, 30, 120]
-  };
-  const c = CX, y = TOP_Y;
-  let path;
-  if (item.shape === "tank") {
-    path = `M${c - 26} ${y} Q${c} ${y + 34} ${c + 26} ${y} L${c + 35} ${y + 44} L${c + 37} ${y + 122} L${c - 37} ${y + 122} L${c - 35} ${y + 44} Z`;
-  } else {
-    const [hw, len, reach, sleeve] = dims[item.shape];
-    path = `M${c - 17} ${y} Q${c} ${y + 15} ${c + 17} ${y} L${c + hw} ${y + 9} L${c + hw + reach} ${y + sleeve} L${c + hw + reach - 16} ${y + sleeve + 8} L${c + hw} ${y + 46} L${c + hw} ${y + len} L${c - hw} ${y + len} L${c - hw} ${y + 46} L${c - hw - reach + 16} ${y + sleeve + 8} L${c - hw - reach} ${y + sleeve} L${c - hw} ${y + 9} Z`;
-  }
-  let extra = "";
-  if (item.detail === "placket") extra = `<path d="M${c} ${y + 8} V${y + (dims[item.shape] ? dims[item.shape][1] : 120)}" stroke="${line}" fill="none"/><path d="M${c - 17} ${y} L${c} ${y + 16} L${c + 17} ${y}" stroke="${line}" fill="none" stroke-width="1.5"/>`;
-  if (item.detail === "collar") extra = `<path d="M${c - 17} ${y} L${c} ${y + 18} L${c + 17} ${y}" stroke="${line}" fill="none" stroke-width="1.5"/>`;
-  return `<path d="${path}" fill="${hex}" stroke="${line}" stroke-width="1.2" stroke-linejoin="round"/>${extra}`;
-}
-
-function drawBottom(item) {
-  const hex = COLORS[item.color].hex, line = lineFor(hex);
-  const c = CX, y = WAIST;
-  if (item.shape === "skirt") {
-    return `<path d="M${c - 35} ${y} H${c + 35} L${c + 56} ${HEM - 44} H${c - 56} Z" fill="${hex}" stroke="${line}" stroke-width="1.2" stroke-linejoin="round"/>`;
-  }
-  const dims = { slim: [35, 22, 5], straight: [37, 35, 5], wide: [39, 62, 7], cargo: [39, 54, 7] };
-  const [waist, hem, gap] = dims[item.shape];
-  const legs = `M${c - waist} ${y} H${c + waist} L${c + hem} ${HEM} H${c + gap} L${c} ${y + 78} L${c - gap} ${HEM} H${c - hem} Z`;
-  let extra = "";
-  if (item.shape === "cargo") {
-    extra = `<rect x="${c + 20}" y="${y + 104}" width="24" height="30" rx="2" fill="none" stroke="${line}"/><rect x="${c - 44}" y="${y + 104}" width="24" height="30" rx="2" fill="none" stroke="${line}"/>`;
-  }
-  return `<path d="${legs}" fill="${hex}" stroke="${line}" stroke-width="1.2" stroke-linejoin="round"/>${extra}`;
-}
-
-function drawShoe(item, x, flip) {
-  const hex = COLORS[item.color].hex, line = lineFor(hex);
-  const uppers = {
-    sneaker: "M2 34 L2 16 Q14 10 22 16 L34 24 Q48 26 52 34 Z",
-    chunky:  "M2 34 L2 12 Q14 6 22 12 L34 22 Q50 24 54 34 Z",
-    loafer:  "M2 34 L3 22 Q14 19 24 22 L36 26 Q48 28 52 34 Z",
-    boot:    "M3 34 L3 -8 H23 L25 16 Q46 22 52 34 Z",
-    heel:    "M8 32 L14 8 L22 8 L24 18 L46 28 Q52 30 52 34 H26 L22 22 Z"
-  };
-  const soles = {
-    sneaker: `<rect x="0" y="34" width="54" height="6" rx="2" fill="#f8f6f1" stroke="#8a8378"/>`,
-    chunky:  `<path d="M0 34 H56 L58 44 Q58 48 54 48 H3 Q-1 48 0 44 Z" fill="#f8f6f1" stroke="#8a8378"/>`,
-    loafer:  `<rect x="0" y="34" width="54" height="4" rx="1" fill="${shade(hex, -0.4)}"/>`,
-    boot:    `<rect x="0" y="34" width="54" height="5" rx="1" fill="${shade(hex, -0.4)}"/>`,
-    heel:    `<rect x="9" y="32" width="9" height="16" fill="${shade(hex, -0.3)}"/><rect x="28" y="34" width="26" height="3" rx="1" fill="${shade(hex, -0.3)}"/>`
-  };
-  const transform = flip ? `translate(${x},362) scale(-1,1)` : `translate(${x},362)`;
-  return `<g transform="${transform}"><path d="${uppers[item.shape]}" fill="${hex}" stroke="${line}" stroke-width="1.2" stroke-linejoin="round"/>${soles[item.shape]}</g>`;
-}
-
-function drawLayer(item) {
-  if (!item) return "";
-  const hex = COLORS[item.color].hex, line = lineFor(hex);
-  const stroke = `stroke="${line}" stroke-width="1.2" stroke-linejoin="round"`;
-  const art = {
-    jacket: `<path d="M26 0 L4 10 L-12 92 L6 96 L14 54 L14 124 H38 L40 26 L42 124 H66 L66 54 L74 96 L92 92 L76 10 L54 0 L40 26 Z" fill="${hex}" ${stroke}/>`,
-    bag:    `<path d="M18 38 Q40 -20 62 38" fill="none" stroke="${hex}" stroke-width="4"/><path d="M18 38 Q40 -20 62 38" fill="none" stroke="${line}" stroke-width=".8"/><rect x="8" y="38" width="64" height="48" rx="8" fill="${hex}" ${stroke}/><path d="M8 54 H72" stroke="${line}"/>`,
-    scarf:  `<path d="M24 0 H54 L52 130 H26 Z" fill="${hex}" ${stroke}/><path d="M28 130 v12 M34 130 v12 M40 130 v12 M46 130 v12 M51 130 v12" stroke="${line}"/>`,
-    cap:    `<path d="M10 52 Q12 6 42 6 Q70 6 72 52 Z" fill="${hex}" ${stroke}/><path d="M60 52 Q84 50 94 62 L60 62 Z" fill="${hex}" ${stroke}/>`
-  };
-  return `<g transform="translate(218,44)">${art[item.shape]}</g>`;
-}
-
-function drawOutfit(outfit) {
-  const { top, bottom, shoes, layer } = outfit.items;
-  const label = names([top, bottom, shoes, layer].filter(Boolean).map(i => `${COLORS[i.color].label.toLowerCase()} ${i.name}`));
-  return `<svg viewBox="0 0 320 416" role="img" aria-label="Flat illustration: ${label}">
-    ${drawBottom(bottom)}${drawTop(top)}
-    ${drawShoe(shoes, CX + 7, false)}${drawShoe(shoes, CX - 7, true)}
-    ${drawLayer(layer)}
-  </svg>`;
+function renderPhotos(present, outfit) {
+  return present.map(slot => {
+    const item = outfit.items[slot];
+    return `<figure class="tile">
+      <img src="${item.photo}" alt="Example photo of a ${item.name}" loading="lazy" width="520" height="650">
+      <figcaption><i style="background:${COLORS[item.color].hex}" aria-hidden="true"></i>Yours: ${COLORS[item.color].label}</figcaption>
+    </figure>`;
+  }).join("");
 }
 
 /* ==========================================================================
@@ -1095,7 +1083,8 @@ function renderOutfit(outfit, index) {
     </div>
     <div class="card-grid">
       <div>
-        <div class="lay">${drawOutfit(outfit)}</div>
+        <div class="lay">${renderPhotos(present, outfit)}</div>
+        <p class="fine">Photos show the style, which may be in a different color. Your color is marked on each one.</p>
         <div class="strip" aria-hidden="true">${colors.map(c => `<i style="background:${COLORS[c].hex}"></i>`).join("")}</div>
         <p class="strip-key">${colors.map(c => `<span>${COLORS[c].label}</span>`).join("")}</p>
         <p class="strip-why">${colorStory(outfit)}</p>
@@ -1145,7 +1134,7 @@ function renderOutfit(outfit, index) {
         ${present.map(slot => {
           const item = outfit.items[slot];
           return `<div class="brand-item"><h5>${cap(item.name)}</h5>
-            ${Object.keys(TIERS).map(tier => `<div class="brand-row ${item.tier === tier ? "match" : ""}"><span>${TIERS[tier]}</span><span>${BRANDS[slot][tier]}</span></div>`).join("")}
+            ${Object.keys(TIERS).map(tier => `<div class="brand-row ${item.tier === tier ? "match" : ""}"><span>${TIERS[tier]}</span><span>${brandsFor(item)[tier]}</span></div>`).join("")}
           </div>`;
         }).join("")}
       </div>
@@ -1180,6 +1169,16 @@ function renderResults() {
       <button class="btn small" data-action="sort" data-sort="high" data-focus="sort-high" aria-pressed="${sortBy === "high"}">Price, high to low</button>
     </div>
     ${outfits.map(renderOutfit).join("")}
+    <details class="panel trends" style="margin-top:24px">
+      <summary>What's shaping these picks</summary>
+      <ul>
+        <li><strong>Seoul:</strong> trench coats, cobalt, strong shoulders, long hems, crinkled fabric and wide, relaxed legs (<a href="https://koreaherald.com/article/10860284">Korea Herald</a>, <a href="https://fashionunited.uk/news/fashion/seoul-fashion-week-ss27-trends-from-re-rhee-lie-sang-bong-and-more/2026091590294">FashionUnited</a>).</li>
+        <li><strong>Runways:</strong> peplum, softer tailoring and statement skirts, with blue as a lead color (<a href="https://fashionunited.uk/news/fashion/spotted-on-the-catwalk-the-wgsn-spring-summer-2027-colours/2025101484366">WGSN via FashionUnited</a>).</li>
+        <li><strong>Models off duty:</strong> a slouchy trench or generous blazer over a white tee and relaxed denim, in neutral tones (<a href="https://www.runwaylive.com/model-off-duty-style-is-driving-global-fashion-trends.html">Runway Magazine</a>).</li>
+        <li><strong>Gym influencers:</strong> baggy tops and sweats over fitted pieces, bigger shorts, flared leggings, and mixed rather than matching sets (<a href="https://www.whowhatwear.com/fashion/trends/activewear-trends-2026">Who What Wear</a>, <a href="https://www.bahrain-confidential.com/oversized-gym-shirts-summer-style/">Bahrain Confidential</a>).</li>
+      </ul>
+      <p class="fine">Read as of November 2026 from editorial and retail coverage, not sales data. It shapes which pieces are in the catalog. It only ranks your results if you turn on Trend-forward or Korean street style.</p>
+    </details>
     ${saved.length ? `<section class="saved" aria-label="Saved outfits">
       <h2>Saved outfits</h2>
       <p>Kept for this session only.</p>

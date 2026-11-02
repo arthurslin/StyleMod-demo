@@ -2,6 +2,10 @@
 
 A concept mockup for a marketing case study on responsible Gen AI personalization: a five-step quiz that generates outfit recommendations from a customer's stated preferences.
 
-StyleMod is a theoretical product. All data is placeholder, brand names are illustrative with no affiliation or endorsement, and everything runs in the browser in memory only.
+**Live demo:** https://arthurslin.github.io/StyleMod-demo/
 
-The whole app is one self-contained file: [`index.html`](index.html). Comments marked `GEN AI PLUG-IN POINT` show where a real model would connect to the rules-based mock engine.
+StyleMod is a theoretical product. Product data is placeholder, brand names are illustrative with no affiliation or endorsement, and the app runs in the browser in memory only.
+
+The app lives in [`index.html`](index.html), with style photos in [`images/`](images). Comments marked `GEN AI PLUG-IN POINT` show where a real model would connect to the rules-based mock engine.
+
+Photos come from Unsplash under the Unsplash License and are listed in [`credits.html`](credits.html). They show each style, not the mock products. The catalog reflects trend coverage as of November 2026, and the sources are linked on the results page.
