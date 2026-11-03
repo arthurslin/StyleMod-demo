@@ -4,51 +4,44 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>StyleMod Outfit Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 <meta name="description" content="Concept mockup: a short quiz that generates outfit recommendations from a customer's stated preferences.">
 <style>
+  /* Colors from the StyleMod deck: midnight background, violet (#7b00ff) and
+     electric blue (#002aff) glows, white type, soft grey (#b5b5b7) secondary text. */
   :root {
-    color-scheme: light;
-    --on-ink: #fff;
-    --on-accent: #fff;
-    --soft-ink: #3a4438;
-    --hover: #fff;
-    --lay: #eae5d9;
-    --swatch-line: rgba(42, 52, 41, .25);
-    --bg: #f4f1ea;
-    --surface: #fbf9f4;
-    --sunken: #eae5d9;
-    --ink: #2a3429;
-    --muted: #535a4e;
-    --line: #d5cfc0;
-    --line-strong: #7e7f6f;
-    --accent: #3f5a3c;
-    --accent-dark: #2a3429;
-    --accent-soft: #e3e6d6;
-    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color-scheme: dark;
+    --bg: #07051a; --surface: #120c33; --sunken: #1a1245; --ink: #ffffff; --muted: #b5b5b7;
+    --line: #2b2470; --line-strong: #5a56d6; --accent: #7d95ff; --accent-dark: #b3c0ff; --accent-soft: #1e1660;
+    --on-ink: #07051a; --on-accent: #ffffff; --soft-ink: #dcdbe8; --hover: #1a1245; --swatch-line: rgba(255, 255, 255, .3);
+    --lay: #ecebf4; --card-line: rgba(0, 42, 255, .6);
+    --violet: #7b00ff; --electric: #002aff;
+    --glow: radial-gradient(1100px 620px at 88% -12%, rgba(123, 0, 255, .38), transparent 60%),
+            radial-gradient(900px 560px at -12% 108%, rgba(0, 42, 255, .32), transparent 60%);
+    --display: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --serif: var(--display);
+    --script: "Great Vibes", "Snell Roundhand", cursive;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --radius: 10px;
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      color-scheme: dark;
-      --bg: #171c16; --surface: #20261f; --sunken: #2a3129; --ink: #f4f1ea; --muted: #b9bdae;
-      --line: #3b4339; --line-strong: #868c7b; --accent: #b4c79a; --accent-dark: #d0ddbb; --accent-soft: #2f3b2b;
-      --on-ink: #171c16; --on-accent: #1a2118; --soft-ink: #dde0d0; --hover: #2a3129; --swatch-line: rgba(244, 241, 234, .35);
-    }
-  }
-  :root[data-theme="dark"] {
-    color-scheme: dark;
-    --bg: #171c16; --surface: #20261f; --sunken: #2a3129; --ink: #f4f1ea; --muted: #b9bdae;
-      --line: #3b4339; --line-strong: #868c7b; --accent: #b4c79a; --accent-dark: #d0ddbb; --accent-soft: #2f3b2b;
-      --on-ink: #171c16; --on-accent: #1a2118; --soft-ink: #dde0d0; --hover: #2a3129; --swatch-line: rgba(244, 241, 234, .35);
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f5f4ff; --surface: #ffffff; --sunken: #ebe9fb; --ink: #0d005e; --muted: #4a4868;
+    --line: #d6d3f2; --line-strong: #6d6aa8; --accent: #2a2ad6; --accent-dark: #0d005e; --accent-soft: #e6e4ff;
+    --on-ink: #ffffff; --on-accent: #ffffff; --soft-ink: #26215a; --hover: #ffffff; --swatch-line: rgba(13, 0, 94, .25);
+    --card-line: rgba(0, 42, 255, .35);
+    --glow: radial-gradient(1100px 620px at 88% -12%, rgba(123, 0, 255, .12), transparent 60%),
+            radial-gradient(900px 560px at -12% 108%, rgba(0, 42, 255, .1), transparent 60%);
   }
   *, *::before, *::after { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
   body {
-    margin: 0; background: var(--bg); color: var(--ink);
+    margin: 0; background: var(--glow), var(--bg); background-attachment: fixed; color: var(--ink);
     font: 400 1rem/1.55 var(--sans);
   }
-  h1, h2, h3, h4 { font-family: var(--serif); font-weight: 500; line-height: 1.2; margin: 0; text-wrap: balance; }
+  h1, h2, h3, h4 { font-family: var(--display); font-weight: 300; letter-spacing: -.01em; line-height: 1.2; margin: 0; text-wrap: balance; }
   p { margin: 0; }
   button, input { font: inherit; color: inherit; }
   :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
@@ -58,10 +51,10 @@
   .skip { position: absolute; left: 16px; top: -60px; background: var(--ink); color: var(--on-ink); padding: 10px 14px; border-radius: 6px; z-index: 20; }
   .skip:focus { top: 8px; }
 
-  .site-head { border-bottom: 1px solid var(--line); background: var(--bg); }
+  .site-head { border-bottom: 1px solid var(--line); background: transparent; }
   .site-head-in, .site-foot-in { max-width: 1080px; margin: 0 auto; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-  .brand { font-family: var(--serif); font-size: 1.3rem; letter-spacing: .01em; }
-  .brand b { font-weight: 500; color: var(--accent); }
+  .brand { font-family: var(--script); font-size: 2rem; line-height: 1; color: var(--ink); }
+  .brand small { display: block; margin: 2px 0 0 26px; font-size: 1rem; }
   .tag { font-size: .8rem; color: var(--muted); text-align: right; }
   a { color: var(--accent); }
   .site-foot { border-top: 1px solid var(--line); margin-top: 48px; color: var(--muted); font-size: .85rem; }
@@ -83,8 +76,8 @@
     cursor: pointer; transition: background .15s, border-color .15s, color .15s;
   }
   .btn:hover { background: var(--sunken); }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
-  .btn.primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+  .btn.primary { background: linear-gradient(90deg, var(--violet), var(--electric)); border-color: transparent; color: #fff; font-weight: 600; }
+  .btn.primary:hover { filter: brightness(1.15); }
   .btn.small { min-height: 36px; padding: 5px 13px; font-size: .875rem; }
   .btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-dark); }
   .link { background: none; border: 0; padding: 2px 0; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; min-height: 24px; }
@@ -200,7 +193,7 @@
   .log { margin-top: 12px; font-size: .925rem; }
   .log ul { margin: 4px 0 0; padding-left: 20px; }
 
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-top: 24px; scroll-margin-top: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--card-line); border-radius: 14px; padding: 16px; margin-top: 24px; scroll-margin-top: 16px; }
   .card-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
   .card-title { font-size: 1.5rem; margin-top: 2px; }
   .total { font-family: var(--serif); font-size: 1.3rem; white-space: nowrap; }
@@ -294,7 +287,7 @@
 <a class="skip" href="#app">Skip to content</a>
 <header class="site-head">
   <div class="site-head-in">
-    <div class="brand">Style<b>Mod</b> Outfit Builder</div>
+    <div class="brand" aria-label="StyleMod, Styled By You">StyleMod,<small>Styled By You</small></div>
     <div class="head-right">
       <div class="tag">Concept mockup, placeholder data</div>
       <button class="btn small" id="themeBtn" data-action="theme">Dark mode</button>
@@ -715,7 +708,8 @@ function fitsFormula(item, ctx) {
     const ids = ctx.anyCut ? ANY_CUT : all ? looks.flatMap(l => light ? l.dark : l.light) : light ? recipe.dark : recipe.light;
     // A matching set repeats the top's color; every other look contrasts it.
     if (!all && recipe.match && !ctx.anyCut) return ids.includes(item.id) && item.color === ctx.bread;
-    return ids.includes(item.id) && PAIRS[ctx.bread].includes(item.color);
+    // The pants never repeat the shoe and coat color, so the middle of the outfit stands apart.
+    return ids.includes(item.id) && PAIRS[ctx.bread].includes(item.color) && (all || ctx.anyCut || item.color !== recipe.shoeColor);
   }
   if (item.slot === "shoes") {
     const ids = all ? looks.flatMap(l => l.shoes) : recipe.shoes;
@@ -1443,7 +1437,7 @@ function option(type, name, value, label, desc, checked, inner = "") {
 function renderIntro() {
   return `<div class="wrap fade">
     <p class="eyebrow">Five quick questions</p>
-    <h1 class="intro-title" tabindex="-1">Outfits built from what you tell us.</h1>
+    <h1 class="intro-title" tabindex="-1">Your Style. Your Preferences. Your Rules.</h1>
     <p class="lede">Answer five quick questions and get three quarter-zip outfits in your style, with easy color pairings.</p>
     <ol class="intro-steps">
       <li><b>1</b> Gender</li>
@@ -1821,7 +1815,8 @@ document.addEventListener("click", event => {
 function paintTheme(dark) {
   document.getElementById("themeBtn").textContent = dark ? "Light mode" : "Dark mode";
 }
-paintTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
+document.documentElement.dataset.theme = "dark";
+paintTheme(true);
 
 render();
 </script>
