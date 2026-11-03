@@ -1266,6 +1266,42 @@ function torsoWidth(img) {
   return torsoMarks.get(img);
 }
 
+/* Where each pant leg ends: centers and widths at the hem, as shares of the image width. */
+const legMarks = new Map();
+function legRuns(img) {
+  if (!legMarks.has(img)) {
+    const solid = alphaOf(img), y = img.height - 4;
+    const runs = [];
+    for (let x = 0, start = -1; x <= img.width; x++) {
+      const on = x < img.width && solid(x, y);
+      if (on && start < 0) start = x;
+      if (!on && start >= 0) { runs.push([start, x]); start = -1; }
+    }
+    let legs = runs.sort((a, b) => (b[1] - b[0]) - (a[1] - a[0])).slice(0, 2).sort((a, b) => a[0] - b[0]);
+    if (legs.length < 2) {
+      const [a, b] = legs[0] || [0, img.width], mid = (a + b) / 2;
+      legs = [[a, mid], [mid, b]];
+    }
+    legMarks.set(img, legs.map(([a, b]) => ({ c: (a + b) / 2 / img.width, w: (b - a) / img.width })));
+  }
+  return legMarks.get(img);
+}
+/* The empty column between the two shoes in a pair photo. */
+const gapMarks = new Map();
+function shoeGap(img) {
+  if (!gapMarks.has(img)) {
+    const solid = alphaOf(img);
+    let best = img.width / 2, least = Infinity;
+    for (let x = Math.round(img.width * .35); x < img.width * .65; x++) {
+      let n = 0;
+      for (let y = 0; y < img.height; y += 2) if (solid(x, y)) n++;
+      if (n < least) { least = n; best = x; }
+    }
+    gapMarks.set(img, best);
+  }
+  return gapMarks.get(img);
+}
+
 /* Full width of a garment image at a given share of its height (shoulders plus sleeve tops). */
 const spanMarks = new Map();
 function garmentSpan(img, share) {
@@ -1328,6 +1364,13 @@ async function paintDummy(canvas, outfit) {
   g.drawImage(dummy, MID - dummy.width / 2, 0);
   g.restore();
   const m = formMarks[form.src] || (formMarks[form.src] = measureForm(dummy));
+  // Shoes replace the dummy's feet.
+  if (shoes) {
+    g.save();
+    g.globalCompositeOperation = "destination-out";
+    g.fillRect(0, m.ankleY - CANVAS_H * .01, CANVAS_W, CANVAS_H);
+    g.restore();
+  }
   const drawn = {};
   // Sleeves cover the arms: under a coat or a long-sleeve top, hide the dummy's arms
   // from shoulder to wrist so the dummy's angled arms never show past the sleeves.
@@ -1369,12 +1412,29 @@ async function paintDummy(canvas, outfit) {
       const width = m.chestW * .5;
       box = { x: MID - width / 2, y: m.neckY + CANVAS_H * .005, width, height: img.height * width / img.width };
     } else if (item.slot === "shoes") {
-      // A pair standing naturally spans about the hips; foot spread varies too much between dummies.
-      const width = m.hipW * .92;
-      const height = img.height * width / img.width;
-      box = { x: MID - width / 2, y: m.footY - height + 6, width, height };
+      // Each shoe sits under its own pant leg: find where the legs land, then place
+      // the left and right shoe there, sized to the leg.
+      const art = real(item) ? img : tinted(img, COLORS[item.color].hex);
+      const pantsImg = bottom && garments[order.indexOf(bottom)];
+      const pairH = img.height * (m.hipW * .92) / img.width;
+      let legs = [{ c: MID - m.hipW * .23, w: m.hipW * .4 }, { c: MID + m.hipW * .23, w: m.hipW * .4 }];
+      if (pantsImg) {
+        const pb = placeBottom(pantsImg, bottom, m, m.footY - pairH + 6 + pairH * .3);
+        legs = legRuns(pantsImg).map(r => ({ c: pb.x + r.c * pb.width, w: r.w * pb.width }));
+      }
+      const gap = shoeGap(img);
+      let shoeTop = CANVAS_H;
+      [[0, gap], [gap, img.width]].forEach(([from, to], side) => {
+        const halfW = to - from;
+        const width = Math.min(m.hipW * .52, Math.max(m.hipW * .34, legs[side].w * 1.15));
+        const height = img.height * width / halfW;
+        const y = m.footY - height + 6;
+        g.drawImage(art, from, 0, halfW, img.height, legs[side].c - width / 2, y, width, height);
+        shoeTop = Math.min(shoeTop, y + height * .3);
+      });
       // The hem lands just inside the shoe's opening, a light break over the top.
-      drawn.shoeTop = box.y + height * .3;
+      drawn.shoeTop = shoeTop;
+      return;
     } else {
       // Under a jacket, the top is drawn narrower so its sleeves stay inside.
       const base = item.slot === "shoes" ? m.hipW * .8 * widthShare / .8
