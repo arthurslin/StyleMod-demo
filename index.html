@@ -1611,7 +1611,12 @@ async function paintDummy(canvas, outfit) {
   const real = item => (item.slot === "shoes" && REAL_SHOES[`${item.id}|${item.color}`]) || realAcc(item);
   const [dummy, ...garments] = await Promise.all([loadImage(form.src), ...order.map(i => realAcc(i) ? loadShoe("../accessories/" + realAcc(i)) : real(i) ? loadShoe(real(i)) : loadImage(WEAR[i.id][0]))]);
   const g = canvas.getContext("2d");
+  g.setTransform(1, 0, 0, 1, 0, 0);
   g.clearRect(0, 0, CANVAS_W, CANVAS_H);
+  // The form's head touches the top of its photo, so the whole figure sits a little lower
+  // and smaller, leaving headroom for a hat.
+  const fit = (CANVAS_H - 30) / CANVAS_H;
+  g.setTransform(fit, 0, 0, fit, MID * (1 - fit), 30);
   const m = formMarks[form.src] || (formMarks[form.src] = measureForm(dummy));
   // A slightly deeper tone and a soft shadow make the form read as solid on the light panel.
   g.save();
@@ -1627,6 +1632,9 @@ async function paintDummy(canvas, outfit) {
     // knee-high boots cover the calf.
     const midi = bottom && (WEAR[bottom.id] || [])[3] === "midi" && shoes.id !== "tall-boot";
     g.fillRect(0, midi ? m.ankleY - (m.ankleY - m.crotchY) * .04 : m.crotchY + (m.ankleY - m.crotchY) * .5, CANVAS_W, CANVAS_H);
+    // Full-length pants hold the legs from the crotch down, so the gap between the legs
+    // shows what's behind, never the form's own thighs. The hands at the sides stay.
+    if (bottom && (WEAR[bottom.id] || [])[3] === "full") g.fillRect(MID - m.hipW * .6, m.crotchY, m.hipW * 1.2, CANVAS_H);
     g.restore();
   }
   const drawn = {};
@@ -1821,13 +1829,26 @@ async function paintDummy(canvas, outfit) {
       f.globalCompositeOperation = "destination-out";
       openingPath(f, WEAR[coat.id][0], { x: 0, y: 0, width: front.width, height: front.height });
       f.fill();
+      // Inside an open coat is in its shade, and the fronts cast a soft shadow on what's
+      // under them, so the pants and knit sit behind the coat rather than on it.
+      g.save();
+      openingPath(g, WEAR[coat.id][0], coatBox);
+      g.clip();
+      g.globalCompositeOperation = "source-atop";
+      g.fillStyle = "rgba(30, 20, 45, .12)";
+      g.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      g.restore();
+      g.save();
+      g.filter = "drop-shadow(0 0 5px rgba(25, 15, 40, .45))";
       g.drawImage(front, coatBox.x, coatBox.y, coatBox.width, coatBox.height);
+      g.restore();
       return;
     }
     if (item === top && longSleeves) handsAt(img, box);
     g.drawImage(art, box.x, box.y, box.width, box.height);
     if (item === top) neckOver(item, box);
   });
+  g.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 /* Practical styling notes for each look, built from the pieces in it. */
