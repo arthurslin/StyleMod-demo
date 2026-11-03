@@ -1148,11 +1148,12 @@ function waistbandWidth(img) {
 
 /* Bottoms keep their own proportions: height sets the scale, and width only
    stretches when the waistband would otherwise be narrower than the waist. */
-function placeBottom(img, item, m) {
+function placeBottom(img, item, m, shoeTop) {
   const [, , ease, length] = WEAR[item.id];
   const top = m.waistY - (m.crotchY - m.waistY) * .12;
   const legSpan = m.ankleY - m.crotchY;
-  const hem = { full: m.ankleY + (m.footY - m.ankleY) * .45, ankle: m.ankleY, midi: m.crotchY + legSpan * .72, knee: m.crotchY + legSpan * .42 }[length];
+  // Full-length pants end where the shoe starts, so both stay visible.
+  const hem = { full: shoeTop || m.ankleY + (m.footY - m.ankleY) * .45, ankle: Math.min(m.ankleY, shoeTop || m.ankleY), midi: m.crotchY + legSpan * .72, knee: m.crotchY + legSpan * .42 }[length];
   const scale = (hem - top) / img.height;
   let width = img.width * scale;
   const band = waistbandWidth(img) * scale;
@@ -1166,7 +1167,8 @@ function placeBottom(img, item, m) {
 async function paintDummy(canvas, outfit) {
   const form = FORMS[activeAnswers().dept];
   const { top, bottom, shoes, layer } = outfit.items;
-  const order = [bottom, shoes, top, layer].filter(Boolean);
+  // Shoes go down first so the pants hem can sit on top of them.
+  const order = [shoes, bottom, top, layer].filter(Boolean);
   const real = item => item.slot === "shoes" && REAL_SHOES[`${item.id}|${item.color}`];
   const [dummy, ...garments] = await Promise.all([loadImage(form.src), ...order.map(i => real(i) ? loadShoe(real(i)) : loadImage(WEAR[i.id][0]))]);
   const g = canvas.getContext("2d");
@@ -1179,7 +1181,7 @@ async function paintDummy(canvas, outfit) {
     const img = garments[i];
     let box;
     const jacket = JACKET_IDS.includes(item.id);
-    if (item.slot === "bottom") box = placeBottom(img, item, m);
+    if (item.slot === "bottom") box = placeBottom(img, item, m, drawn.shoeTop);
     else if (item.slot === "top" || jacket) {
       // Length sets the scale: collar at the neck, hem at a fixed point on the body.
       // Width then follows the garment's own proportions, capped to the arm span.
@@ -1196,6 +1198,8 @@ async function paintDummy(canvas, outfit) {
       const width = m.hipW * .92;
       const height = img.height * width / img.width;
       box = { x: MID - width / 2, y: m.footY - height + 6, width, height };
+      // The hem lands just inside the shoe's opening, a light break over the top.
+      drawn.shoeTop = box.y + height * .3;
     } else {
       // Under a jacket, the top is drawn narrower so its sleeves stay inside.
       const base = item.slot === "shoes" ? m.hipW * .8 * widthShare / .8
