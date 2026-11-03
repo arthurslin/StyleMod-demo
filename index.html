@@ -1200,7 +1200,7 @@ function measureForm(img) {
   const chestRun = run(chestY);
   const chestW = chestRun && chestRun < hipW * 1.3 ? chestRun : run(waistY) * 1.2;
   const feetW = spanAt(footY - 14);
-  return { neckY, waistY, waistW: run(waistY), hipW, crotchY, ankleY, footY, armSpan, chestW, feetW };
+  return { neckY, waistY, waistW: run(waistY), hipW, crotchY, ankleY, footY, armSpan, chestW, feetW, spanAt };
 }
 /* A top's own body width, measured below the sleeves' reach. */
 const torsoMarks = new Map();
@@ -1213,6 +1213,20 @@ function torsoWidth(img) {
     torsoMarks.set(img, r - l);
   }
   return torsoMarks.get(img);
+}
+
+/* Full width of a garment image at a given share of its height (shoulders plus sleeve tops). */
+const spanMarks = new Map();
+function garmentSpan(img, share) {
+  const key = img.src + share;
+  if (!spanMarks.has(key)) {
+    const solid = alphaOf(img), y = img.height * share;
+    let l = 0, r = img.width - 1;
+    while (l < r && !solid(l, y)) l++;
+    while (r > l && !solid(r, y)) r--;
+    spanMarks.set(key, r - l);
+  }
+  return spanMarks.get(key);
 }
 
 const garmentMarks = new Map();
@@ -1260,6 +1274,17 @@ async function paintDummy(canvas, outfit) {
   g.drawImage(dummy, MID - dummy.width / 2, 0);
   const m = formMarks[form.src] || (formMarks[form.src] = measureForm(dummy));
   const drawn = {};
+  // Sleeves cover the arms: under a coat or a long-sleeve top, hide the dummy's arms
+  // from shoulder to wrist so the dummy's angled arms never show past the sleeves.
+  const longSleeves = top && top.id.startsWith("quarter-zip") && !top.id.includes("short");
+  if ((layer && JACKET_IDS.includes(layer.id)) || longSleeves) {
+    const side = m.chestW * .56, armTop = m.neckY + CANVAS_H * .03, armBottom = m.crotchY - CANVAS_H * .015;
+    g.save();
+    g.globalCompositeOperation = "destination-out";
+    g.fillRect(0, armTop, MID - side, armBottom - armTop);
+    g.fillRect(MID + side, armTop, CANVAS_W, armBottom - armTop);
+    g.restore();
+  }
   order.forEach((item, i) => {
     const [, topEdge, widthShare, , offset] = WEAR[item.id] || [];
     const img = garments[i];
@@ -1275,8 +1300,15 @@ async function paintDummy(canvas, outfit) {
         "chore": m.crotchY + CANVAS_H * .035, "blazer": m.crotchY + CANVAS_H * .05, "power-blazer": m.crotchY + CANVAS_H * .06,
         "trench": m.crotchY + legSpan * .5, "crop-puffer": m.waistY + CANVAS_H * .04, "track-top": m.crotchY
       }[item.id] || m.crotchY - CANVAS_H * .025;
-      const scale = Math.min((hem - y) / img.height, m.armSpan * (jacket ? 1.3 : 1.1) / img.width);
-      box = { x: MID - img.width * scale / 2, y, width: img.width * scale, height: img.height * scale };
+      // Length sets the vertical scale. Across, the garment's shoulder line matches the
+      // dummy's shoulders (plus room to wear it), within a small stretch so nothing distorts.
+      const sy = (hem - y) / img.height;
+      const shoulderRow = .15;
+      const bodyAt = m.spanAt(Math.round(y + img.height * sy * shoulderRow));
+      const ease = jacket ? 1.26 : item.id === "quarter-zip-cable" ? 1.1 : 1.06;
+      const want = bodyAt * ease / garmentSpan(img, shoulderRow);
+      const sx = Math.min(sy * 1.2, Math.max(sy * .85, want));
+      box = { x: MID - img.width * sx / 2, y, width: img.width * sx, height: img.height * sy };
     } else if (item.id === "chain") {
       const width = m.chestW * .5;
       box = { x: MID - width / 2, y: m.neckY + CANVAS_H * .005, width, height: img.height * width / img.width };
