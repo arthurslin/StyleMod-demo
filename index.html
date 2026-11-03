@@ -53,7 +53,7 @@
 
   .site-head { border-bottom: 1px solid var(--line); background: transparent; }
   .site-head-in, .site-foot-in { max-width: 1080px; margin: 0 auto; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-  .brand { font-family: var(--script); font-size: 2rem; line-height: 1; color: var(--ink); }
+  .brand { font-family: var(--script); font-size: 2rem; line-height: 1; color: var(--ink); text-decoration: none; }
   .brand small { display: block; margin: 2px 0 0 26px; font-size: 1rem; }
   .tag { font-size: .8rem; color: var(--muted); text-align: right; }
   a { color: var(--accent); }
@@ -287,7 +287,7 @@
 <a class="skip" href="#app">Skip to content</a>
 <header class="site-head">
   <div class="site-head-in">
-    <div class="brand" aria-label="StyleMod, Styled By You">StyleMod,<small>Styled By You</small></div>
+    <a class="brand" href="./" data-action="home" aria-label="StyleMod, Styled By You. Start the quiz again">StyleMod,<small>Styled By You</small></a>
     <div class="head-right">
       <div class="tag">Concept mockup, placeholder data</div>
       <button class="btn small" id="themeBtn" data-action="theme">Dark mode</button>
@@ -718,6 +718,14 @@ function coatColorFor(top, bottom, shoes, style) {
   return options.find(contrasts) || options.find(c => c !== top.color) || "black";
 }
 
+/* Shoes echo the top's depth: dark tops get dark shoes, light tops get light ones.
+   Leather shoes stay brown or black; sneakers go white or black. */
+function shoeColorFor(recipe, topColor) {
+  const leather = recipe.shoes.some(id => ["loafer", "chelsea"].includes(id));
+  if (isLight(topColor)) return recipe.shoeColor === "black" ? (leather ? "brown" : "white") : recipe.shoeColor;
+  return recipe.shoeColor === "white" ? "black" : recipe.shoeColor;
+}
+
 function fitsFormula(item, ctx) {
   const looks = STYLE_LOOKS[ctx.style] || STYLE_LOOKS.classic;
   const recipe = looks[ctx.look === undefined ? 0 : ctx.look];
@@ -730,11 +738,11 @@ function fitsFormula(item, ctx) {
     // A matching set repeats the top's color; every other look contrasts it.
     if (!all && recipe.match && !ctx.anyCut) return ids.includes(item.id) && item.color === ctx.bread;
     // The pants never repeat the shoe and coat color, so the middle of the outfit stands apart.
-    return ids.includes(item.id) && PAIRS[ctx.bread].includes(item.color) && (all || ctx.anyCut || item.color !== recipe.shoeColor);
+    return ids.includes(item.id) && PAIRS[ctx.bread].includes(item.color) && (all || ctx.anyCut || item.color !== shoeColorFor(recipe, ctx.bread));
   }
   if (item.slot === "shoes") {
     const ids = all ? looks.flatMap(l => l.shoes) : recipe.shoes;
-    return ids.includes(item.id) && (all ? ["white", "brown", "black"].includes(item.color) : item.color === recipe.shoeColor);
+    return ids.includes(item.id) && (all ? ["white", "brown", "black"].includes(item.color) : item.color === shoeColorFor(recipe, ctx.bread));
   }
   if (item.slot === "layer") {
     const ids = all ? looks.flatMap(l => l.layers) : recipe.layers;
@@ -1142,7 +1150,7 @@ const WEAR = {
 
 /* Shoes photographed in their real color. These are drawn as-is, never tinted. */
 const REAL_SHOES = {
-  "low-snk|white": "low-snk-white", "loafer|brown": "loafer-brown", "loafer|black": "loafer-black",
+  "low-snk|white": "low-snk-white", "low-snk|black": "low-snk-black", "loafer|brown": "loafer-brown", "loafer|black": "loafer-black",
   "chunky-snk|white": "chunky-snk-white", "chunky-snk|black": "chunky-snk-black",
   "chelsea|brown": "chelsea-brown", "chelsea|black": "chelsea-black",
   "runner|white": "runner-white", "runner|black": "runner-black"
@@ -1743,6 +1751,12 @@ const clearDialog = document.getElementById("clearDialog");
 
 const actions = {
   start()  { view = 1; render(); },
+  home() {
+    answers = defaultAnswers();
+    outfits = []; openFeedback = null;
+    view = "intro";
+    render();
+  },
   theme(el) {
     const dark = el.textContent === "Dark mode";
     document.documentElement.dataset.theme = dark ? "dark" : "light";
@@ -1835,7 +1849,9 @@ const actions = {
 
 document.addEventListener("click", event => {
   const el = event.target.closest("[data-action]");
-  if (el) actions[el.dataset.action](el);
+  if (!el) return;
+  if (el.tagName === "A") event.preventDefault();
+  actions[el.dataset.action](el);
 });
 
 /* Follows the device setting until the customer chooses. The choice isn't stored. */
