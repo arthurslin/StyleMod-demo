@@ -1321,8 +1321,8 @@ function shoeHalves(img) {
     const tighten = (a, b) => {
       const peak = Math.max(...counts.slice(a, b));
       let l = a, r = b - 1;
-      while (l < r && counts[l] < peak * .3) l++;
-      while (r > l && counts[r] < peak * .3) r--;
+      while (l < r && counts[l] < peak * .1) l++;
+      while (r > l && counts[r] < peak * .1) r--;
       return [l, r + 1];
     };
     halfMarks.set(img, [tighten(0, gap), tighten(gap, img.width)]);
@@ -1455,10 +1455,10 @@ async function paintDummy(canvas, outfit) {
       let shoeTop = CANVAS_H;
       // Feet don't change with the pants: one scale for both shoes, set by the body.
       const scale = (m.hipW * .88) / img.width;
-      // A real pair is a mirror image: take the cleaner (narrower) shoe and mirror it for the
-      // other foot, so both match and no floor shadow or sliver comes along.
+      // A real pair is a mirror image: take the fuller shoe of the photo (the one the split
+      // didn't cut into) and mirror it for the other foot, so both are complete and match.
       const halves = shoeHalves(img);
-      const base = (halves[0][1] - halves[0][0]) <= (halves[1][1] - halves[1][0]) ? 0 : 1;
+      const base = (halves[0][1] - halves[0][0]) >= (halves[1][1] - halves[1][0]) ? 0 : 1;
       [0, 1].forEach(side => {
         const [from, to] = halves[base];
         const halfW = to - from;
