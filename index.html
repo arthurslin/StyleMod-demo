@@ -216,6 +216,8 @@
   .strip-why { font-size: .9rem; margin-top: 4px; }
 
   .items { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .row-actions { display: flex; gap: 6px; }
+  .items li.is-hidden .item-name, .items li.is-hidden .item-meta { opacity: .5; }
   .items li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
   .slot { font-size: .75rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
   .item-name { font-weight: 600; }
@@ -774,6 +776,13 @@ function fitsFormula(item, ctx) {
   return false;
 }
 
+/* The same occasion preference applies to the fresh list. */
+pool.fresh = (slot, items, ctx) => {
+  if (slot === "layer" || slot === "accessory") return items;
+  const forOccasion = items.filter(item => item.occ.includes(ctx.occasion));
+  return forOccasion.length ? forOccasion : items;
+};
+
 /* Hard rules. Department comes only from the customer's explicit choice. */
 function pool(slot, ctx) {
   const { a } = ctx;
@@ -783,6 +792,9 @@ function pool(slot, ctx) {
     return fitsFormula(item, ctx);
   };
   const allowed = CATALOG.filter(item => matches(item) && !a.avoid.includes(item.color));
+  // A new outfit leaves out pieces from the one it replaces, whenever another option fits.
+  const fresh = ctx.avoid && ctx.avoid.size ? allowed.filter(item => !ctx.avoid.has(pieceKey(item))) : allowed;
+  if (fresh.length && fresh.length < allowed.length) return pool.fresh(slot, fresh, ctx);
   if (slot === "layer" || slot === "accessory") return allowed;
   if (slot === "bottom" && !allowed.length && !ctx.anyCut) { ctx.anyCut = true; return pool(slot, ctx); }
   const forOccasion = allowed.filter(item => item.occ.includes(ctx.occasion));
@@ -819,6 +831,8 @@ function score(item, ctx) {
   if (item.id === "chunky-snk" && ctx.silhouette === "small-top") total += 2;
   if (a.trend && item.color === "cobalt") total += 1;
   if (item.photo) total += 3;
+  // Pieces from outfits already shown rank lower, so a new outfit brings something new.
+  if (ctx.avoid && ctx.avoid.has(pieceKey(item))) total -= 6;
   if (item.slot === "shoes" && REAL_SHOES[`${item.id}|${item.color}`]) total += 10;
   if (a.age <= 1 && item.tags.includes("trend")) total += 1.5;
   if (a.age >= 3 && item.tags.includes("durable")) total += 1.5;
@@ -861,7 +875,43 @@ function fitBudget(items, a) {
   }
 }
 
-function buildOutfit(index, keepSilhouette) {
+/* Every outfit shown this session, so shuffling or rebuilding never repeats one. */
+const shownOutfits = new Set();
+const pieceKey = item => `${item.id}|${item.color}`;
+const outfitSignature = items => Object.values(items).filter(Boolean).map(pieceKey).sort().join(",");
+function onScreen() {
+  const sigs = new Set(outfits.filter(Boolean).map(o => outfitSignature(o.items)));
+  sigs.pieces = outfits.filter(Boolean).flatMap(o => Object.values(o.items).filter(Boolean).map(pieceKey));
+  return sigs;
+}
+
+function buildOutfit(index, keepSilhouette, opts = {}) {
+  const avoid = new Set(opts.avoid || []);
+  const replaced = opts.avoid && opts.avoid.length ? [...opts.avoid].sort().join(",") : "";
+  // Try the requested look first; if it has no new combination left, move to the style's other looks.
+  const start = opts.look === undefined ? index % 3 : opts.look;
+  let fallback;
+  for (const look of [start, (start + 1) % 3, (start + 2) % 3]) {
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const outfit = buildOnce(index, keepSilhouette, look, avoid);
+      const sig = outfitSignature(outfit.items);
+      fallback = fallback || outfit;
+      if (!shownOutfits.has(sig) && sig !== replaced && !onScreen().has(sig)) { shownOutfits.add(sig); return outfit; }
+      Object.values(outfit.items).filter(Boolean).forEach(i => avoid.add(pieceKey(i)));
+    }
+  }
+  // Every combination has been shown: allow a repeat, but never one already on screen.
+  for (const look of [0, 1, 2]) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const outfit = buildOnce(index, keepSilhouette, look, attempt ? new Set(onScreen().pieces) : new Set());
+      const sig = outfitSignature(outfit.items);
+      if (sig !== replaced && !onScreen().has(sig)) return outfit;
+    }
+  }
+  return fallback;
+}
+
+function buildOnce(index, keepSilhouette, lookIndex, avoid) {
   const a = activeAnswers();
   const others = outfits.filter(Boolean);
   const usedStyles = new Set(others.flatMap(o => Object.values(o.items).filter(Boolean).map(i => i.id)));
@@ -875,7 +925,8 @@ function buildOutfit(index, keepSilhouette) {
     hero: families[index % families.length],
     tier: budgetTier(a),
     bread: a.favorite || "navy",
-    look: index % 3,
+    look: lookIndex === undefined ? index % 3 : lookIndex,
+    avoid,
     style: a.style,
     accessory: a.accessory,
     gym: ctx_gym(a)
@@ -896,9 +947,11 @@ function buildOutfit(index, keepSilhouette) {
 }
 
 function generateAll() {
+  // Rebuilding with the same answers steers away from the pieces just shown.
+  const previous = outfits.flatMap(o => Object.values(o.items).filter(Boolean).map(pieceKey));
   outfits = [];
   openFeedback = null;
-  for (let i = 0; i < 3; i++) outfits.push(buildOutfit(i));
+  for (let i = 0; i < 3; i++) outfits.push(buildOutfit(i, undefined, { avoid: previous }));
   sortOutfits();
 }
 
@@ -1374,6 +1427,10 @@ function placeBottom(img, item, m, shoeTop) {
 }
 
 async function paintDummy(canvas, outfit) {
+  // Hidden pieces are left off the dummy, and everything else adapts as if they weren't worn.
+  if (outfit.hidden && outfit.hidden.size) {
+    outfit = { ...outfit, items: Object.fromEntries(Object.entries(outfit.items).map(([k, v]) => [k, outfit.hidden.has(k) ? null : v])) };
+  }
   const form = FORMS[activeAnswers().dept];
   const { top, bottom, shoes, layer } = outfit.items;
   // Shoes go down first so the pants hem can sit on top of them.
@@ -1466,6 +1523,14 @@ async function paintDummy(canvas, outfit) {
         const height = img.height * scale;
         const flip = side !== base;
         const y = m.footY - height + 6;
+        // One soft, even contact shadow under each shoe instead of the photo's floor shadow.
+        g.save();
+        g.filter = "blur(4px)";
+        g.fillStyle = "rgba(25, 18, 50, .28)";
+        g.beginPath();
+        g.ellipse(legs[side].c, m.footY + 3, width * .52, Math.max(4, width * .09), 0, 0, Math.PI * 2);
+        g.fill();
+        g.restore();
         if (flip) {
           g.save();
           g.translate(legs[side].c, 0);
@@ -1752,13 +1817,16 @@ function renderOutfit(outfit, index) {
         <ul class="items">
           ${present.map(slot => {
             const item = outfit.items[slot];
-            return `<li>
+            return `<li class="${outfit.hidden && outfit.hidden.has(slot) ? "is-hidden" : ""}">
               <div>
-                <span class="slot">${SLOTS[slot]}</span><br>
+                <span class="slot">${SLOTS[slot]}${outfit.hidden && outfit.hidden.has(slot) ? " · hidden" : ""}</span><br>
                 <span class="item-name">${cap(COLORS[item.color].label)} ${item.name}</span><br>
                 <span class="item-meta">$${item.price}, ${TIERS[item.tier]}, ${item.material}</span>
               </div>
-              <button class="btn small" data-action="swap" data-index="${index}" data-slot="${slot}" data-focus="swap-${index}-${slot}" aria-label="Swap this item: ${item.name}">Swap this item</button>
+              <span class="row-actions">
+                <button class="btn small" data-action="swap" data-index="${index}" data-slot="${slot}" data-focus="swap-${index}-${slot}" aria-label="Swap this item: ${item.name}">Swap</button>
+                <button class="btn small" data-action="hide" data-index="${index}" data-slot="${slot}" data-focus="hide-${index}-${slot}" aria-pressed="${!!(outfit.hidden && outfit.hidden.has(slot))}" aria-label="${outfit.hidden && outfit.hidden.has(slot) ? "Show" : "Hide"} ${item.name} on the dummy">${outfit.hidden && outfit.hidden.has(slot) ? "Show" : "Hide"}</button>
+              </span>
             </li>`;
           }).join("")}
         </ul>
@@ -1966,9 +2034,19 @@ const actions = {
     render(`[data-focus="swap-${index}-${slot}"]`);
     toast(swapped ? `${SLOTS[slot]} swapped.` : "That's every option for this piece. Starting the list over.");
   },
+  hide(el) {
+    const { index, slot } = el.dataset;
+    const outfit = outfits[Number(index)];
+    outfit.hidden = outfit.hidden || new Set();
+    if (outfit.hidden.has(slot)) outfit.hidden.delete(slot); else outfit.hidden.add(slot);
+    render(`[data-focus="hide-${index}-${slot}"]`);
+    toast(outfit.hidden.has(slot) ? `${SLOTS[slot]} hidden on the dummy.` : `${SLOTS[slot]} shown again.`);
+  },
   shuffle(el) {
     const index = Number(el.dataset.index);
-    outfits[index] = buildOutfit(index, outfits[index].silhouette);
+    const current = outfits[index];
+    outfits[index] = buildOutfit(index, current.silhouette, { look: current.look, avoid: Object.values(current.items).filter(Boolean).map(pieceKey) });
+    outfits[index].hidden = current.hidden;
     render(`[data-focus="shuffle-${index}"]`);
     toast(`Outfit ${index + 1} shuffled.`);
   },
