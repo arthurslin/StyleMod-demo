@@ -483,6 +483,12 @@ const STYLES = [
   { id: "crop-puffer", slot: "layer", name: "cropped puffer jacket", fit: "regular", sil: EVEN, occ: ["casual", "weekend"], dept: BOTH, base: 110, colors: LAYER_COLORS, material: "recycled down", tags: ["sustainable"] },
   { id: "tote",       slot: "accessory", name: "slouchy tote bag", fit: "regular", sil: EVEN, occ: ["casual", "work", "weekend"], dept: BOTH, base: 55, colors: LAYER_COLORS, material: "organic cotton canvas", tags: ["sustainable"] },
   { id: "beanie",     slot: "accessory", name: "ribbed beanie", fit: "regular", sil: EVEN, occ: ["casual", "weekend"], dept: BOTH, base: 25, colors: LAYER_COLORS, material: "recycled wool", tags: ["sustainable"] },
+  { id: "shell",      slot: "layer", name: "technical shell jacket", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 140, colors: ALL, material: "recycled waterproof nylon", tags: ["trend", "durable"] },
+  { id: "fleece-jacket", slot: "layer", name: "high-pile fleece jacket", fit: "relaxed", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 90, colors: ALL, material: "recycled polyester fleece", tags: ["trend", "sustainable"] },
+  { id: "moto",       slot: "layer", name: "faux-leather moto jacket", fit: "slim", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 85, colors: ALL, material: "vegan leather", tags: ["trend"] },
+  { id: "extra-wide-jean", slot: "bottom", name: "extra-wide jeans", fit: "relaxed", sil: SMALL_TOP, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 80, colors: ALL, material: "rigid cotton denim", tags: ["trend"] },
+  { id: "stacked-jean", slot: "bottom", name: "stacked flare jeans", fit: "slim", sil: BIG_TOP, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 60, colors: ALL, material: "stretch denim", tags: ["trend"] },
+  { id: "hobo",       slot: "accessory", name: "leather hobo bag", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 90, colors: ALL, material: "soft pebbled leather", tags: ["trend"] },
   { id: "chain",      slot: "accessory", name: "chain necklace", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 45, colors: ["gold", "silver"], material: "recycled sterling silver or gold vermeil", tags: ["durable"] },
   { id: "belt",       slot: "accessory", name: "leather belt", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 50, colors: ["brown", "black", "white"], material: "full-grain leather", tags: ["durable"] },
   { id: "watch",      slot: "accessory", name: "minimal watch", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 120, colors: ["gold", "silver"], material: "stainless steel", tags: ["durable"] },
@@ -535,7 +541,7 @@ const PHOTO_COLORS = {
 };
 
 /* One record per style + color + price tier. */
-const CATALOG = STYLES.flatMap(style => [...new Set([...(["shoes", "layer"].includes(style.slot) || ["cap", "beanie", "crossbody", "tote"].includes(style.id) ? ALL : style.colors), PHOTO_COLORS[style.id]])].filter(Boolean).flatMap(color => Object.keys(TIERS).map(tier => ({
+const CATALOG = STYLES.flatMap(style => [...new Set([...(["shoes", "layer"].includes(style.slot) || ["cap", "beanie", "crossbody", "tote", "hobo"].includes(style.id) ? ALL : style.colors), PHOTO_COLORS[style.id]])].filter(Boolean).flatMap(color => Object.keys(TIERS).map(tier => ({
   ...style,
   key: `${style.id}|${color}|${tier}`,
   color,
@@ -663,13 +669,13 @@ const ACCESSORIES = {
   none:    { label: "None",    ids: [] },
   hat:     { label: "Hat",     ids: ["cap", "beanie"] },
   jewelry: { label: "Jewelry", ids: ["chain"] },
-  bag:     { label: "Bag",     ids: ["crossbody", "tote"] },
+  bag:     { label: "Bag",     ids: ["crossbody", "tote", "hobo"] },
   belt:    { label: "Belt",    ids: ["belt"] },
   watch:   { label: "Watch",   ids: ["watch"] }
 };
 /* Pants that come in every color, so a pairing is always possible. */
 const ANY_CUT = ["str-pant", "wide-pant", "cargo", "track-pant"];
-const look = (tops, dark, light, shoes, shoeColor, layers) => ({ tops, dark, light, shoes, shoeColor, layers });
+const look = (tops, dark, light, shoes, shoeColor, layers, inspo = "", match = false) => ({ tops, dark, light, shoes, shoeColor, layers, inspo, match });
 const STYLE_LOOKS = {
   classic: [
     look(["quarter-zip"], ["str-pant", "cig-pant"], ["khakis", "str-pant"], ["loafer"], "brown", ["blazer", "trench"]),
@@ -678,18 +684,18 @@ const STYLE_LOOKS = {
   ],
   athleisure: [
     look(["quarter-zip-fleece"], ["tapered-jog", "track-pant"], ["track-pant", "tapered-jog"], ["runner"], "white", ["track-top"]),
-    look(["quarter-zip-short"], ["track-pant"], ["track-pant"], ["chunky-snk"], "white", ["track-top"]),
-    look(["quarter-zip"], ["tapered-jog"], ["tapered-jog"], ["runner"], "black", ["track-top"])
+    look(["quarter-zip-short"], ["track-pant"], ["track-pant"], ["chunky-snk"], "white", ["fleece-jacket"], "Musinsa's fleece outerwear"),
+    look(["quarter-zip"], ["tapered-jog"], ["tapered-jog"], ["runner"], "black", ["track-top"], "Fashion Nova's matching sets", true)
   ],
   minimalist: [
     look(["quarter-zip"], ["cig-pant", "slim-jean"], ["str-pant", "slim-khakis"], ["low-snk"], "white", ["chore"]),
-    look(["quarter-zip-short"], ["str-pant"], ["str-pant"], ["loafer"], "black", ["blazer"]),
-    look(["quarter-zip-fleece"], ["slim-jean", "cig-pant"], ["str-pant"], ["chelsea"], "black", ["blazer"])
+    look(["quarter-zip-short"], ["str-pant"], ["str-pant"], ["loafer"], "black", ["shell"], "Musinsa's technical shells"),
+    look(["quarter-zip-fleece"], ["extra-wide-jean", "cig-pant"], ["str-pant", "extra-wide-jean"], ["chelsea"], "black", ["blazer"], "Musinsa's extra-wide denim")
   ],
   streetwear: [
-    look(["quarter-zip-waffle"], ["cargo", "wide-jean"], ["cargo", "parachute"], ["chunky-snk"], "white", ["track-top"]),
-    look(["quarter-zip-short-waffle"], ["parachute", "wide-jean"], ["cargo"], ["chunky-snk"], "black", ["chore"]),
-    look(["quarter-zip"], ["wide-jean", "cargo"], ["wide-sweat", "cargo"], ["low-snk"], "white", ["track-top"])
+    look(["quarter-zip-waffle"], ["extra-wide-jean", "cargo"], ["extra-wide-jean", "cargo"], ["chunky-snk"], "white", ["shell"], "Musinsa's extra-wide denim and shells"),
+    look(["quarter-zip-short-waffle"], ["stacked-jean"], ["stacked-jean"], ["chunky-snk"], "black", ["moto"], "Fashion Nova's stacked jeans and moto jackets"),
+    look(["quarter-zip"], ["cargo", "wide-jean"], ["cargo", "wide-sweat"], ["low-snk"], "white", ["fleece-jacket"], "Musinsa's fleece outerwear")
   ],
   bohemian: [
     look(["quarter-zip-cable"], ["wide-pant"], ["wide-pant"], ["chelsea"], "brown", ["trench"]),
@@ -707,6 +713,8 @@ function fitsFormula(item, ctx) {
   if (item.slot === "top") return item.color === ctx.bread && (all ? item.id.startsWith("quarter-zip") : recipe.tops.includes(item.id));
   if (item.slot === "bottom") {
     const ids = ctx.anyCut ? ANY_CUT : all ? looks.flatMap(l => light ? l.dark : l.light) : light ? recipe.dark : recipe.light;
+    // A matching set repeats the top's color; every other look contrasts it.
+    if (!all && recipe.match && !ctx.anyCut) return ids.includes(item.id) && item.color === ctx.bread;
     return ids.includes(item.id) && PAIRS[ctx.bread].includes(item.color);
   }
   if (item.slot === "shoes") {
@@ -721,6 +729,11 @@ function fitsFormula(item, ctx) {
   if (item.slot === "accessory") {
     const pick = ACCESSORIES[ctx.accessory] || ACCESSORIES.none;
     if (!pick.ids.includes(item.id)) return false;
+    // Hobo bags suit softer styles, crossbody bags the sportier ones.
+    if (["hobo", "crossbody", "tote"].includes(item.id)) {
+      const bag = { bohemian: "hobo", classic: "hobo", minimalist: "crossbody", streetwear: "crossbody", athleisure: "tote" }[ctx.style] || "crossbody";
+      return item.id === bag && !!shoes && item.color === shoes.color;
+    }
     if (item.id === "chain") return item.color === (ctx.style === "bohemian" ? "gold" : "silver");
     if (item.id === "watch") return item.color === (ctx.style === "bohemian" || ctx.style === "classic" ? "gold" : "silver");
     if (item.id === "cap") return ["athleisure", "streetwear"].includes(ctx.style) && !!shoes && item.color === shoes.color;
@@ -848,6 +861,7 @@ function buildOutfit(index, keepSilhouette) {
 
   return {
     id: nextId++, silhouette, occasion: ctx.occasion, items, look: ctx.look, style: a.style,
+    inspo: ((STYLE_LOOKS[a.style] || [])[ctx.look] || {}).inspo || "",
     relaxedAvoid: !!ctx.relaxedAvoid, seen: new Set(), savedId: null
   };
 }
@@ -961,12 +975,13 @@ function proportionText(outfit) {
   const { top, bottom, shoes } = outfit.items;
   const c = label => COLORS[label].label.toLowerCase();
   const tone = item => isLight(item.color) ? "light" : "dark";
-  const pattern = `${cap(tone(top))} on top, ${tone(bottom)} in the middle, ${tone(shoes)} at your feet.`;
+  const matched = top.color === bottom.color;
+  const pattern = matched ? `A matching ${c(top.color)} set, finished with ${c(shoes.color)} ${shoes.name}.` : `${cap(tone(top))} on top, ${tone(bottom)} in the middle, ${tone(shoes)} at your feet.`;
   const coat = outfit.items.layer;
   const coatLine = coat ? ` The ${c(coat.color)} ${coat.name} matches your ${shoes.name}, which ties the look together.` : "";
   const extra = outfit.items.accessory;
   const extraLine = extra ? ` A ${c(extra.color)} ${extra.name} finishes it.` : "";
-  return `${pattern} The ${c(bottom.color)} ${bottom.name} make the ${c(top.color)} ${top.name} and ${c(shoes.color)} ${shoes.name} stand out. ${cap(c(bottom.color))} and ${c(top.color)} are an easy, classic pairing.${coatLine}${extraLine}`;
+  return `${pattern} The ${c(bottom.color)} ${bottom.name} make the ${c(top.color)} ${top.name} and ${c(shoes.color)} ${shoes.name} stand out. ${cap(c(bottom.color))} and ${c(top.color)} are an easy, classic pairing.${coatLine}${extraLine}${outfit.inspo ? ` Inspired by ${outfit.inspo}.` : ""}`;
 }
 
 function colorStory(outfit) {
@@ -1082,6 +1097,8 @@ const CANVAS_W = 520, CANVAS_H = 900, MID = CANVAS_W / 2;
 /* For each style: image, top edge as a share of height, width against the shoulders,
    and for bottoms a set height, so legs always reach the same place on the form. */
 const WEAR = {
+  "shell": ["shell-jacket", 0, 1.9], "fleece-jacket": ["fleece-jacket", 0, 1.9], "moto": ["moto-jacket", 0, 1.8],
+  "extra-wide-jean": ["extra-wide-jeans", 0, 1.35, "full"], "stacked-jean": ["stacked-jeans", 0, 1.05, "full"], "hobo": ["hobo-bag", .5, .62, null, 1.0],
   "quarter-zip": ["quarter-zip", 0, 1.66], "quarter-zip-short": ["quarter-zip-short", 0, 1.5], "quarter-zip-short-waffle": ["quarter-zip-short-waffle", 0, 1.5], "quarter-zip-waffle": ["quarter-zip-waffle", 0, 1.66], "quarter-zip-cable": ["quarter-zip-cable", 0, 1.7],
   "quarter-zip-fleece": ["quarter-zip-fleece", 0, 1.66], "khakis": ["straight-trousers", 0, 1.15, "full"], "slim-khakis": ["slim-jeans", 0, 1.05, "full"],
   "crop-tee": ["crop-tee", .137, 1.42], "rib-tee": ["tee", .137, 1.42], "rib-tank": ["tank", .145, .92], "train-tank": ["tank", .145, .92],
@@ -1124,7 +1141,7 @@ function loadShoe(name) {
   return imageCache[key];
 }
 
-const JACKET_IDS = ["blazer", "power-blazer", "chore", "track-top", "trench", "crop-puffer"];
+const JACKET_IDS = ["shell", "fleece-jacket", "moto", "blazer", "power-blazer", "chore", "track-top", "trench", "crop-puffer"];
 
 const imageCache = {};
 function loadImage(name) {
@@ -1232,7 +1249,7 @@ function garmentSpan(img, share) {
 const garmentMarks = new Map();
 function waistbandWidth(img) {
   if (!garmentMarks.has(img)) {
-    const solid = alphaOf(img), y = img.height * .03;
+    const solid = alphaOf(img), y = img.height * .07;
     let n = 0;
     for (let x = 0; x < img.width; x++) if (solid(x, y)) n++;
     garmentMarks.set(img, n);
@@ -1252,7 +1269,7 @@ function placeBottom(img, item, m, shoeTop) {
   let width = img.width * scale;
   const band = waistbandWidth(img) * scale;
   const minBand = m.waistW * 1.04;
-  if (band < minBand) width *= Math.min(1.6, minBand / band);
+  if (band < minBand) width *= Math.min(1.25, minBand / band);
   // Two legs side by side need at least the hips plus ease, but never balloon.
   width = Math.min(Math.max(width, m.hipW * ease), img.width * scale * 1.6, m.hipW * ease * 1.5);
   return { x: MID - width / 2, y: top, width, height: hem - top };
@@ -1298,7 +1315,7 @@ async function paintDummy(canvas, outfit) {
       const legSpan = m.ankleY - m.crotchY;
       const hem = {
         "chore": m.crotchY + CANVAS_H * .035, "blazer": m.crotchY + CANVAS_H * .05, "power-blazer": m.crotchY + CANVAS_H * .06,
-        "trench": m.crotchY + legSpan * .5, "crop-puffer": m.waistY + CANVAS_H * .04, "track-top": m.crotchY
+        "trench": m.crotchY + legSpan * .5, "shell": m.crotchY + CANVAS_H * .03, "fleece-jacket": m.crotchY + CANVAS_H * .01, "moto": m.waistY + CANVAS_H * .07, "crop-puffer": m.waistY + CANVAS_H * .04, "track-top": m.crotchY
       }[item.id] || m.crotchY - CANVAS_H * .025;
       // Length sets the vertical scale. Across, the garment's shoulder line matches the
       // dummy's shoulders (plus room to wear it), within a small stretch so nothing distorts.
