@@ -207,6 +207,8 @@
   .tile figcaption { position: absolute; left: 6px; right: 6px; bottom: 6px; line-height: 1.25; display: flex; width: fit-content; align-items: center; gap: 5px; padding: 3px 8px 3px 4px; border-radius: 10px; background: var(--surface); color: var(--ink); font-size: .78rem; }
   .tile figcaption i { flex: none; width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--swatch-line); }
   .trends ul { margin: 8px 0 0; padding-left: 20px; }
+  .details { margin: 4px 0 0; padding-left: 20px; }
+  .details li + li { margin-top: 4px; }
   .trends li + li { margin-top: 6px; }
   .strip { display: flex; height: 34px; border-radius: 6px; overflow: hidden; margin-top: 14px; border: 1px solid var(--swatch-line); }
   .strip i { flex: 1; }
@@ -555,7 +557,8 @@ const CATALOG = STYLES.flatMap(style => [...new Set([...(["shoes", "layer"].incl
 /* Style groups get their own illustrative brands. Same caveats as BRANDS. */
 const BRANDS_KOREAN = { value: "Musinsa Standard, 8Seconds, Spao", mid: "Covernat, thisisneverthat, Mardi Mercredi", premium: "Andersson Bell, Ader Error, Wooyoungmi" };
 const BRANDS_GYM = { value: "Old Navy, Decathlon, Uniqlo", mid: "Gymshark, Nike, Under Armour", premium: "Lululemon, Alo Yoga, Rhone" };
-const brandsFor = item => item.korean ? BRANDS_KOREAN : item.occ[0] === "gym" && item.slot !== "shoes" ? BRANDS_GYM : BRANDS[item.slot];
+const BRANDS_LEATHER = { value: "Clarks, Florsheim, Steve Madden", mid: "Dr. Martens, Cole Haan, Blundstone", premium: "Grenson, R.M. Williams, Allen Edmonds" };
+const brandsFor = item => ["loafer", "chelsea"].includes(item.id) ? BRANDS_LEATHER : item.korean ? BRANDS_KOREAN : item.occ[0] === "gym" && item.slot !== "shoes" ? BRANDS_GYM : BRANDS[item.slot];
 
 const BY_KEY = new Map(CATALOG.map(item => [item.key, item]));
 
@@ -1314,7 +1317,7 @@ async function paintDummy(canvas, outfit) {
   const drawable = item => item.slot !== "accessory" || (WEAR[item.id] && !["belt", "watch"].includes(item.id)) || (item.id === "chain" && realAcc(item));
   const order = [shoes, bottom, top, layer, extra].filter(Boolean).filter(drawable);
   const real = item => (item.slot === "shoes" && REAL_SHOES[`${item.id}|${item.color}`]) || realAcc(item);
-  const [dummy, ...garments] = await Promise.all([loadImage(form.src), ...order.map(i => realAcc(i) ? loadShoe("../accessories/" + realAcc(i)) : real(i) ? loadShoe(real(i)) : loadImage(WEAR[i.id][0]))]);
+  const [dummy, teeImg, ...garments] = await Promise.all([loadImage(form.src), loadImage("tee"), ...order.map(i => realAcc(i) ? loadShoe("../accessories/" + realAcc(i)) : real(i) ? loadShoe(real(i)) : loadImage(WEAR[i.id][0]))]);
   const g = canvas.getContext("2d");
   g.clearRect(0, 0, CANVAS_W, CANVAS_H);
   g.drawImage(dummy, MID - dummy.width / 2, 0);
@@ -1379,6 +1382,18 @@ async function paintDummy(canvas, outfit) {
     }
     const art = real(item) ? img : tinted(img, COLORS[item.color].hex);
     const coated = layer && JACKET_IDS.includes(layer.id);
+    if (item === top && showsTee(outfit)) {
+      // A tee peeks about 2cm below the knit's hem: the knit and tee become one layer.
+      const layered = document.createElement("canvas");
+      layered.width = CANVAS_W; layered.height = CANVAS_H;
+      const l = layered.getContext("2d");
+      const teeW = box.width * .8, teeTop = box.y + box.height * .1, teeBottom = box.y + box.height + CANVAS_H * .022;
+      l.drawImage(tinted(teeImg, COLORS[isLight(top.color) ? "grey" : "white"].hex), MID - teeW / 2, teeTop, teeW, teeBottom - teeTop);
+      l.drawImage(art, box.x, box.y, box.width, box.height);
+      if (coated) { drawn.top = { art: layered, box: { x: 0, y: box.y, width: CANVAS_W, height: CANVAS_H - box.y }, full: true }; return; }
+      g.drawImage(layered, 0, 0);
+      return;
+    }
     // Under a coat, the top waits until the coat is drawn.
     if (item === top && coated) { drawn.top = { art, box }; return; }
     g.drawImage(art, box.x, box.y, box.width, box.height);
@@ -1388,7 +1403,7 @@ async function paintDummy(canvas, outfit) {
       under.width = CANVAS_W; under.height = CANVAS_H;
       const u = under.getContext("2d");
       const t = drawn.top.box;
-      u.drawImage(drawn.top.art, t.x, t.y, t.width, t.height);
+      if (drawn.top.full) u.drawImage(drawn.top.art, 0, 0); else u.drawImage(drawn.top.art, t.x, t.y, t.width, t.height);
       u.globalCompositeOperation = "destination-in";
       u.drawImage(art, box.x, box.y, box.width, box.height);
       const opening = m.chestW * .3;
@@ -1405,11 +1420,43 @@ async function paintDummy(canvas, outfit) {
         g.beginPath();
         g.rect(0, coatHem - 2, CANVAS_W, t.y + t.height - coatHem + 2);
         g.clip();
-        g.drawImage(drawn.top.art, t.x, t.y, t.width, t.height);
+        if (drawn.top.full) g.drawImage(drawn.top.art, 0, 0); else g.drawImage(drawn.top.art, t.x, t.y, t.width, t.height);
         g.restore();
       }
     }
   });
+}
+
+/* A tee hem under the knit, except for sporty looks where the zip is worn on its own. */
+const showsTee = outfit => outfit.style !== "athleisure" && outfit.items.top && outfit.items.top.id.startsWith("quarter-zip");
+
+/* Practical styling notes for each look, built from the pieces in it. */
+function stylingDetails(outfit) {
+  const { top, bottom, shoes, layer, accessory } = outfit.items;
+  const c = item => COLORS[item.color].label.toLowerCase();
+  const notes = [];
+  notes.push(top.id.includes("short")
+    ? `Zip the ${c(top)} collar about halfway so it sits open at the neck.`
+    : `Zip the ${c(top)} collar about halfway and push the sleeves up slightly at the wrist.`);
+  if (showsTee(outfit)) notes.push(`Let a ${isLight(top.color) ? "grey" : "white"} tee show about 2cm below the knit's hem for a clean layered line.`);
+  const cut = bottom.id;
+  if (["wide-pant", "pleat-wide", "extra-wide-jean", "wide-jean", "wide-sweat", "parachute", "cargo"].includes(cut)) notes.push(`Let the ${bottom.name} fall straight and skim the top of the shoe, with no cuff.`);
+  else if (cut === "stacked-jean") notes.push("Let the extra length stack in soft folds just above the shoe.");
+  else if (["tapered-jog", "track-pant"].includes(cut)) notes.push(`Sit the ${bottom.name} cuff just above the ankle so the shoe stays visible.`);
+  else notes.push(`Wear the ${bottom.name} with a slight break, or one small cuff to show the shoe.`);
+  const leather = ["loafer", "chelsea"].includes(shoes.id);
+  notes.push(leather
+    ? `Pair the ${c(shoes)} ${shoes.name} with thin socks in ${c(bottom)} or ${shoes.color === "brown" ? "brown" : "black"}, so the leg line runs into the shoe.`
+    : `Wear ${shoes.color === "white" ? "white crew or no-show" : "black crew"} socks with the ${shoes.name}.`);
+  if (layer) notes.push(`Wear the ${c(layer)} ${layer.name} open so the knit shows down the front.`);
+  if (accessory) {
+    const tip = { cap: "Wear the cap facing forward and slightly low.", beanie: "Fold the beanie cuff once and wear it back from the forehead.",
+      chain: "Wear the chain over the knit, just below the collar.", belt: "Half-tuck the front of the knit so the belt shows.",
+      watch: "Wear the watch on your non-writing wrist, just past the knit's cuff.", hobo: "Carry the hobo bag on the shoulder opposite your bag hand.",
+      crossbody: "Wear the crossbody bag high on the hip, strap across the body.", tote: "Carry the tote in the hand, or on the shoulder over the coat." }[accessory.id];
+    if (tip) notes.push(tip);
+  }
+  return notes;
 }
 
 function dummyLabel(outfit) {
@@ -1623,6 +1670,10 @@ function renderOutfit(outfit, index) {
         </div>` : ""}
       </div>
     </div>
+    <section class="sub">
+      <h4>Styling details</h4>
+      <ul class="details">${stylingDetails(outfit).map(n => `<li>${n}</li>`).join("")}</ul>
+    </section>
     <section class="sub">
       <h4>Fit and silhouette notes</h4>
       ${fitNotes(outfit).map(p => `<p>${p}</p>`).join("")}
