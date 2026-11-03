@@ -142,6 +142,9 @@
   .color-pick span { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); font-size: .9rem; }
   .color-pick i { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--swatch-line); }
   .color-pick input:checked + span { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); background: var(--accent-soft); font-weight: 600; }
+  .color-pick input:disabled + span { opacity: .35; filter: grayscale(1); cursor: not-allowed; }
+  .color-pick input:disabled { cursor: not-allowed; }
+  .color-pick i.any { background: conic-gradient(#1f2d4d 0 25%, #d9c8ad 0 50%, #1f1f21 0 75%, #f8f6f1 0); }
   .color-pick input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
   .note { margin-top: 12px; padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--sunken); font-size: .925rem; }
 
@@ -333,12 +336,16 @@ const COLORS = {
   olive:   { label: "Olive",   hex: "#5f6336", family: "earth" },
   rust:    { label: "Rust",    hex: "#a64b24", family: "earth" },
   camel:   { label: "Camel",   hex: "#b98a4f", family: "earth" },
+  brown:   { label: "Brown",   hex: "#5a3a26", family: "earth" },
   navy:    { label: "Navy",    hex: "#1f2d4d", family: "cool" },
   slate:   { label: "Slate",   hex: "#566675", family: "cool" },
   sage:    { label: "Sage",    hex: "#9caf97", family: "cool" },
   red:     { label: "Red",     hex: "#c8242f", family: "bold" },
   cobalt:  { label: "Cobalt",  hex: "#1e4fc2", family: "bold" },
-  mustard: { label: "Mustard", hex: "#d7a11d", family: "bold" }
+  mustard: { label: "Mustard", hex: "#d7a11d", family: "bold" },
+  wine:    { label: "Wine",    hex: "#6b1d2f", family: "bold" },
+  emerald: { label: "Emerald", hex: "#0f5c46", family: "bold" },
+  plum:    { label: "Plum",    hex: "#4d2147", family: "bold" }
 };
 
 const PALETTES = {
@@ -423,6 +430,8 @@ const STYLES = [
   { id: "quarter-zip-waffle", slot: "top", name: "waffle-knit quarter zip", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 80, colors: ALL, material: "cotton waffle knit", tags: ["durable", "trend"] },
   { id: "quarter-zip-cable", slot: "top", name: "cable-knit quarter zip", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 95, colors: ALL, material: "chunky wool-blend cable knit", tags: ["durable"] },
   { id: "quarter-zip-fleece", slot: "top", name: "ribbed fleece quarter zip", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 70, colors: ALL, material: "recycled ribbed fleece", tags: ["sustainable"] },
+  { id: "quarter-zip-short", slot: "top", name: "short-sleeve quarter zip", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 60, colors: ALL, material: "fine cotton knit", tags: ["trend"] },
+  { id: "quarter-zip-short-waffle", slot: "top", name: "short-sleeve waffle quarter zip", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 65, colors: ALL, material: "cotton waffle knit", tags: ["trend"] },
   { id: "quarter-zip", slot: "top", name: "quarter zip", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 75, colors: ALL, material: "merino-cotton knit", tags: ["durable", "trend"] },
 
   // Bottoms
@@ -553,7 +562,7 @@ const defaultAnswers = () => ({
   dept: "unisex", occasions: [], palettes: [], avoid: [],
   body: "unsure", fit: "regular", silhouette: "balanced",
   budget: [100, 800], sustainable: false, durable: false, trend: true, kstyle: false,
-  favorite: "",
+  favorite: "", pants: "",
   consent: true
 });
 const emptyFeedback = () => ({ colors: {}, styles: {}, sils: [], log: [] });
@@ -611,17 +620,24 @@ const LIGHT = ["white", "beige", "grey", "sage", "camel", "mustard"];
 const PAIRS = {
   white: ["navy", "black", "olive"], beige: ["navy", "black", "olive"], grey: ["black", "navy"],
   sage: ["navy", "black", "slate"], camel: ["navy", "black"], mustard: ["navy", "black", "slate"],
-  black: ["beige", "grey", "white"], navy: ["beige", "white", "grey"], olive: ["beige", "white"],
-  slate: ["beige", "white"], rust: ["beige", "white"], red: ["beige", "white", "grey"], cobalt: ["white", "beige", "grey"]
+  black: ["beige", "grey", "white"], navy: ["beige", "white", "grey", "camel"], olive: ["beige", "white"],
+  slate: ["beige", "white"], rust: ["beige", "white"], brown: ["beige", "white", "grey"],
+  wine: ["beige", "grey", "white", "camel"], emerald: ["beige", "white", "grey"], plum: ["grey", "beige", "white"], red: ["beige", "white", "grey"], cobalt: ["white", "beige", "grey", "camel"]
 };
 const JEANS = ["str-jean", "slim-jean"];
 const KHAKIS = ["khakis", "slim-khakis"];
 const LOOKS = [
-  { tops: ["quarter-zip"], dark: ["str-jean", "slim-jean"], light: ["khakis", "slim-khakis"], shoes: ["low-snk", "chunky-snk"], lightShoes: ["white"], darkShoes: ["black"] },
-  { tops: ["quarter-zip-waffle", "quarter-zip-fleece"], dark: ["str-pant", "cig-pant"], light: ["str-jean", "slim-khakis"], shoes: ["loafer", "chelsea"], lightShoes: "top", darkShoes: "top" },
-  { tops: ["quarter-zip-cable"], dark: ["wide-pant", "cargo"], light: ["wide-pant", "khakis"], shoes: ["chelsea", "chunky-snk"], lightShoes: ["beige", "white"], darkShoes: ["rust", "black"] }
+  { tops: ["quarter-zip", "quarter-zip-short"], dark: ["str-jean", "slim-jean", "cig-pant"], light: ["khakis", "slim-khakis", "str-pant"],
+    shoes: ["low-snk", "chunky-snk"], lightShoes: ["white"], darkShoes: ["white"] },
+  { tops: ["quarter-zip-waffle", "quarter-zip-fleece", "quarter-zip-short-waffle"], dark: ["str-pant", "cig-pant"], light: ["str-jean", "slim-khakis", "str-pant"],
+    shoes: ["loafer", "chelsea"], lightShoes: ["brown"], darkShoes: ["brown"] },
+  { tops: ["quarter-zip-cable"], dark: ["wide-pant", "cargo"], light: ["wide-pant", "khakis"],
+    shoes: ["chelsea", "chunky-snk", "loafer"], lightShoes: ["black"], darkShoes: ["black"] }
 ];
 const isLight = color => LIGHT.includes(color);
+/* The quiz offers royal, jewel-tone colors for the quarter zip. */
+const ROYAL = ["wine", "cobalt", "emerald", "plum", "navy"];
+const PANTS_CHOICES = ["beige", "camel", "white", "grey", "black", "navy", "slate", "olive"];
 
 function fitsFormula(item, ctx) {
   const look = LOOKS[ctx.look === undefined ? 0 : ctx.look];
@@ -629,12 +645,13 @@ function fitsFormula(item, ctx) {
   if (item.slot === "top") return item.color === ctx.bread && (ctx.look === undefined ? item.id.startsWith("quarter-zip") : look.tops.includes(item.id));
   if (item.slot === "bottom") {
     const ids = ctx.look === undefined ? LOOKS.flatMap(l => light ? l.dark : l.light) : light ? look.dark : look.light;
-    return ids.includes(item.id) && PAIRS[ctx.bread].includes(item.color);
+    const colors = ctx.pants && PAIRS[ctx.bread].includes(ctx.pants) ? [ctx.pants] : PAIRS[ctx.bread];
+    return ids.includes(item.id) && colors.includes(item.color);
   }
   if (item.slot === "shoes") {
+    // Shoes stay in real shoe colors, light or dark to match the top.
     const ids = ctx.gym ? ["runner", "chunky-snk"] : ctx.look === undefined ? LOOKS.flatMap(l => l.shoes) : look.shoes;
-    const colors = ctx.look === undefined ? [ctx.bread, ...(light ? ["white", "beige"] : ["black", "rust"])]
-      : (light ? look.lightShoes : look.darkShoes) === "top" ? [ctx.bread] : light ? look.lightShoes : look.darkShoes;
+    const colors = ctx.gym ? ["white", "black"] : ctx.look === undefined ? ["white", "brown", "black"] : light ? look.lightShoes : look.darkShoes;
     return ids.includes(item.id) && colors.includes(item.color);
   }
   return false;
@@ -739,6 +756,7 @@ function buildOutfit(index, keepSilhouette) {
     tier: budgetTier(a),
     bread: a.favorite || "navy",
     look: index % LOOKS.length,
+    pants: a.pants,
     gym: ctx_gym(a)
   };
 
@@ -796,7 +814,7 @@ function swapItem(index, slot) {
   const room = a.budget[1] - rest.reduce((sum, i) => sum + i.price, 0);
   const ctx = {
     a, silhouette: outfit.silhouette, occasion: outfit.occasion, chosen: rest,
-    hero: null, tier: budgetTier(a), usedColors: new Set(), bread: a.favorite || "navy", look: outfit.look, gym: ctx_gym(a),
+    hero: null, tier: budgetTier(a), usedColors: new Set(), bread: a.favorite || "navy", look: outfit.look, gym: ctx_gym(a), pants: a.pants,
     usedStyles: new Set(current ? [current.id] : [])
   };
   const options = pool(slot, ctx).filter(i => !outfit.seen.has(`${i.id}|${i.color}`));
@@ -861,7 +879,8 @@ const isPlural = item => /s$/.test(item.name);
 function proportionText(outfit) {
   const { top, bottom, shoes } = outfit.items;
   const c = label => COLORS[label].label.toLowerCase();
-  const pattern = isLight(top.color) ? "Light on top, dark in the middle, light at your feet." : "Dark on top, light in the middle, dark at your feet.";
+  const tone = item => isLight(item.color) ? "light" : "dark";
+  const pattern = `${cap(tone(top))} on top, ${tone(bottom)} in the middle, ${tone(shoes)} at your feet.`;
   return `${pattern} The ${c(bottom.color)} ${bottom.name} make the ${c(top.color)} ${top.name} and ${c(shoes.color)} ${shoes.name} stand out. ${cap(c(bottom.color))} and ${c(top.color)} are an easy, classic pairing.`;
 }
 
@@ -980,7 +999,7 @@ const CANVAS_W = 520, CANVAS_H = 900, MID = CANVAS_W / 2;
 /* For each style: image, top edge as a share of height, width against the shoulders,
    and for bottoms a set height, so legs always reach the same place on the form. */
 const WEAR = {
-  "quarter-zip": ["quarter-zip", 0, 1.66], "quarter-zip-waffle": ["quarter-zip-waffle", 0, 1.66], "quarter-zip-cable": ["quarter-zip-cable", 0, 1.7],
+  "quarter-zip": ["quarter-zip", 0, 1.66], "quarter-zip-short": ["quarter-zip-short", 0, 1.5], "quarter-zip-short-waffle": ["quarter-zip-short-waffle", 0, 1.5], "quarter-zip-waffle": ["quarter-zip-waffle", 0, 1.66], "quarter-zip-cable": ["quarter-zip-cable", 0, 1.7],
   "quarter-zip-fleece": ["quarter-zip-fleece", 0, 1.66], "khakis": ["straight-trousers", 0, 1.15, "full"], "slim-khakis": ["slim-jeans", 0, 1.05, "full"],
   "crop-tee": ["crop-tee", .137, 1.42], "rib-tee": ["tee", .137, 1.42], "rib-tank": ["tank", .145, .92], "train-tank": ["tank", .145, .92],
   "knit-polo": ["polo", .13, 1.5], "tech-tee": ["tee", .137, 1.42], "peplum": ["peplum", .137, 1.42], "crew-tee": ["tee", .137, 1.55],
@@ -1104,7 +1123,7 @@ function placeBottom(img, item, m) {
 async function paintDummy(canvas, outfit) {
   const form = FORMS[activeAnswers().dept];
   const { top, bottom, shoes, layer } = outfit.items;
-  const order = [shoes, bottom, top, layer].filter(Boolean);
+  const order = [bottom, shoes, top, layer].filter(Boolean);
   const [dummy, ...garments] = await Promise.all([form.src, ...order.map(i => WEAR[i.id][0])].map(loadImage));
   const g = canvas.getContext("2d");
   g.clearRect(0, 0, CANVAS_W, CANVAS_H);
@@ -1210,11 +1229,21 @@ function renderIntro() {
 
 const STEP_VIEWS = {
   1: () => ({
-    title: "Pick a color",
-    hint: "Your quarter zip will be this color.",
-    body: `<fieldset class="section"><legend class="sr">Favorite color</legend>
-        <div class="color-picks">${ALL.map(c => `<label class="color-pick"><input type="radio" name="favorite" value="${c}" ${answers.favorite === c ? "checked" : ""}><span><i style="background:${COLORS[c].hex}" aria-hidden="true"></i>${COLORS[c].label}</span></label>`).join("")}</div>
-      </fieldset>`
+    title: "Pick your colors",
+    hint: "Pick a royal color for your quarter zip, then a color for your pants.",
+    body: `<fieldset class="section"><legend class="sr">Main color</legend>
+        <div class="color-picks">${ROYAL.map(c => `<label class="color-pick"><input type="radio" name="favorite" value="${c}" ${answers.favorite === c ? "checked" : ""}><span><i style="background:${COLORS[c].hex}" aria-hidden="true"></i>${COLORS[c].label}</span></label>`).join("")}</div>
+      </fieldset>
+      ${answers.favorite ? `<fieldset class="section"><legend>Pants color</legend>
+        <p class="hint">Only colors that pair with ${COLORS[answers.favorite].label.toLowerCase()} can be picked. The rest are greyed out.</p>
+        <div class="color-picks">
+          <label class="color-pick"><input type="radio" name="pants" value="" ${!answers.pants ? "checked" : ""}><span><i class="any" aria-hidden="true"></i>Any match</span></label>
+          ${PANTS_CHOICES.filter(c => c !== answers.favorite).map(c => {
+            const ok = PAIRS[answers.favorite].includes(c);
+            return `<label class="color-pick"><input type="radio" name="pants" value="${c}" ${ok ? "" : "disabled"} ${answers.pants === c ? "checked" : ""}><span><i style="background:${COLORS[c].hex}" aria-hidden="true"></i>${COLORS[c].label}${ok ? "" : '<span class="sr"> (does not pair)</span>'}</span></label>`;
+          }).join("")}
+        </div>
+      </fieldset>` : ""}`
   }),
   2: () => ({
     title: "Who are we dressing?",
@@ -1274,7 +1303,7 @@ function renderOutfit(outfit, index) {
   return `<article class="card" id="outfit-${index}" aria-labelledby="outfit-title-${index}">
     <div class="card-head">
       <div>
-        <p class="eyebrow">${isLight(outfit.items.top.color) ? "Light · dark · light" : "Dark · light · dark"}</p>
+        <p class="eyebrow">${["top", "bottom", "shoes"].map(k => isLight(outfit.items[k].color) ? "Light" : "Dark").join(" · ")}</p>
         <h3 class="card-title" id="outfit-title-${index}" tabindex="-1">Look ${index + 1}: ${COLORS[outfit.items.top.color].label} ${outfit.items.top.name}</h3>
         <p class="item-meta">${OCCASIONS[outfit.occasion]}</p>
         ${personalized() ? `<p class="match-note">${index === 0 && sortBy === "match" ? "<b>Best match.</b> " : ""}Meets ${matchChecks(outfit).met} of ${matchChecks(outfit).count} checks against your answers</p>` : ""}
@@ -1421,6 +1450,8 @@ app.addEventListener("change", event => {
   else if (input.name === "favorite") {
     answers.favorite = input.value;
     answers.palettes = [...new Set([COLORS[input.value].family, "neutral"])];
+    if (!PAIRS[input.value].includes(answers.pants)) answers.pants = "";
+    render(`[name="favorite"][value="${input.value}"]`);
   } else if (input.name === "occasion") answers.occasions = [input.value];
   else if (input.type === "radio") answers[input.name] = input.value;
 });
