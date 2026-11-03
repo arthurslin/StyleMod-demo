@@ -1542,12 +1542,12 @@ function garmentCuffs(img) {
       let low = 0;
       for (let y = H - 1; y > 0 && !low; y--) for (let x = outer; x < outer + band; x++) if (solid(col(x), y)) { low = y; break; }
       // The cuff's width a little above its lowest point, along the sleeve's outer run.
-      const y = Math.round(low - H * .02);
+      const y = Math.round(low - H * .008);
       let l = 0;
       while (l < W * .3 && !solid(col(l), y)) l++;
       let r = l;
       while (r < l + W * .16 && solid(col(r), y)) r++;
-      return { x: col((l + r) / 2), y: low };
+      return { x: col((l + r) / 2), y: low, w: r - l };
     };
     cuffMarks.set(img.src, [cuff(0), cuff(1)]);
   }
@@ -1558,22 +1558,39 @@ function garmentCuffs(img) {
 const handMarks = {};
 function formHands(dummy, m) {
   if (!handMarks[dummy.src]) {
-    const solid = alphaOf(dummy), W = dummy.width, cx = W / 2, len = Math.round(CANVAS_H * .075);
+    const solid = alphaOf(dummy), W = dummy.width, cx = W / 2, len = Math.round(CANVAS_H * .11);
     const inArm = x => x < cx - m.chestW * .56;
     let tip = 0;
     for (let y = Math.round(m.crotchY + CANVAS_H * .1); y > m.waistY && !tip; y--) for (let x = 0; x < W; x++) if (inArm(x) && solid(x, y)) { tip = y; break; }
-    const xs = [];
-    for (let x = 0; x < W; x++) if (inArm(x) && solid(x, tip - len)) xs.push(x);
     const right = Math.round(cx - m.chestW * .56);
     const sprite = document.createElement("canvas");
     sprite.width = right; sprite.height = len + 2;
-    sprite.getContext("2d").drawImage(dummy, 0, tip - len, right, sprite.height, 0, 0, right, sprite.height);
+    const sg = sprite.getContext("2d");
+    sg.drawImage(dummy, 0, tip - len, right, sprite.height, 0, 0, right, sprite.height);
+    // Keep only the hand and forearm, the piece joined to the fingertips: on a form with
+    // wide hips the cut would otherwise take a slice of hip with it.
+    const px = sg.getImageData(0, 0, right, sprite.height), keep = new Uint8Array(right * sprite.height);
+    const start = [...Array(right).keys()].filter(x => px.data[((len - 1) * right + x) * 4 + 3] > 40);
+    const stack = start.map(x => (len - 1) * right + x);
+    stack.forEach(i => keep[i] = 1);
+    while (stack.length) {
+      const i = stack.pop(), x = i % right, y = (i - x) / right;
+      [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+        const nx = x + dx, ny = y + dy, j = ny * right + nx;
+        if (nx >= 0 && nx < right && ny >= 0 && ny < sprite.height && !keep[j] && px.data[j * 4 + 3] > 40) { keep[j] = 1; stack.push(j); }
+      });
+    }
+    for (let i = 0; i < keep.length; i++) if (!keep[i]) px.data[i * 4 + 3] = 0;
+    sg.putImageData(px, 0, 0);
+    // The wrist: the middle of the hand where it leaves the cuff.
+    const wristRow = len - Math.round(CANVAS_H * .068);
+    const xs = [...Array(right).keys()].filter(x => keep[wristRow * right + x]);
     const mirrored = document.createElement("canvas");
     mirrored.width = right; mirrored.height = sprite.height;
     const mg = mirrored.getContext("2d");
     mg.translate(right, 0); mg.scale(-1, 1); mg.drawImage(sprite, 0, 0);
     const wrist = xs.length ? (xs[0] + xs[xs.length - 1]) / 2 : right / 2;
-    handMarks[dummy.src] = [{ sprite, wrist }, { sprite: mirrored, wrist: right - wrist }];
+    handMarks[dummy.src] = [{ sprite, wrist, len }, { sprite: mirrored, wrist: right - wrist, len }];
   }
   return handMarks[dummy.src];
 }
@@ -1679,22 +1696,35 @@ async function paintDummy(canvas, outfit) {
     if (bottom && (WEAR[bottom.id] || [])[3] === "full") g.fillRect(MID - m.hipW * .6, m.crotchY, m.hipW * 1.2, CANVAS_H);
     g.restore();
   }
+  // Fully dressed, only the head and hands of the form show: everything below the collar
+  // goes (arms, body, legs and the form's soft shadow), and the hands are put back at the
+  // cuffs. With a piece hidden, the form shows as above so the outfit isn't left floating.
+  if (top && bottom) {
+    g.save();
+    g.globalCompositeOperation = "destination-out";
+    g.fillRect(0, m.neckY + CANVAS_H * .03, CANVAS_W, CANVAS_H);
+    g.restore();
+  }
   const drawn = {};
   // Hands come out of the outer sleeves: drawn just before that garment, so the cuff covers the wrist.
-  // Both hands mirror each other about the middle, like the garments, and only the hand
-  // below the cuff is ever drawn, so no piece of forearm shows beside a sleeve.
+  // Both hands mirror each other about the middle, like the garments. Each one runs well
+  // up into its sleeve, so the wrist is never seen cut off, and it may show only below the
+  // cuff or inside the cuff's own opening, so no piece of forearm shows beside a sleeve.
   const handsAt = (img, box) => {
     const hands = formHands(dummy, m);
     const cuff = garmentCuffs(img)[0];
     const x = box.x + cuff.x * box.width / img.width, y = box.y + cuff.y * box.height / img.height;
+    const opening = cuff.w * box.width / img.width;
     [x, 2 * MID - x].forEach((at, side) => {
       const hand = hands[side];
       g.save();
       g.beginPath();
-      g.rect(0, y - CANVAS_H * .006, CANVAS_W, CANVAS_H);
+      g.rect(0, y - 1, CANVAS_W, CANVAS_H);
+      g.rect(at - opening / 2, y - CANVAS_H * .05, opening, CANVAS_H * .05);
       g.clip();
       g.filter = "brightness(.88)";
-      g.drawImage(hand.sprite, at - hand.wrist, y - CANVAS_H * .012);
+      // The fingertips land a hand's length below the cuff.
+      g.drawImage(hand.sprite, at - hand.wrist, y + CANVAS_H * .068 - hand.len);
       g.restore();
     });
   };
@@ -1758,28 +1788,6 @@ async function paintDummy(canvas, outfit) {
   const coatArt = coat && tinted(coatImg, COLORS[coat.color].hex);
   const coatBox = coat && upperBox(coat, coatImg);
   const coatHemY = coat && coatBox.y + coatBox.height * hemShare(WEAR[coat.id][0]);
-  // Under the knit's hem the body is dressed, never bare: from the hem to mid-thigh, take
-  // out the form's own torso and legs (the runs crossing the middle), leaving the arms
-  // and hands beside them. Pants that taper in under the knit then show no form behind.
-  const topImgEarly = top && garments[order.indexOf(top)];
-  if (topImgEarly && bottom && ["full", "ankle", "midi"].includes((WEAR[bottom.id] || [])[3])) {
-    const knitEarly = upperBox(top, topImgEarly);
-    const from = Math.round(knitEarly.y + knitEarly.height * centerHem(topImgEarly) - CANVAS_H * .03);
-    const to = Math.round(m.crotchY + CANVAS_H * .12);
-    const solid = alphaOf(dummy), left = MID - dummy.width / 2, core = m.hipW * .45;
-    g.save();
-    g.globalCompositeOperation = "destination-out";
-    for (let y = from; y < to; y++) {
-      for (let x = 0; x < dummy.width; x++) {
-        if (!solid(x, y)) continue;
-        let r = x;
-        while (r < dummy.width - 1 && solid(r + 1, y)) r++;
-        if (left + x < MID + core && left + r > MID - core) g.fillRect(left + x - 1, y, r - x + 3, 1);
-        x = r;
-      }
-    }
-    g.restore();
-  }
   order.forEach((item, i) => {
     const [, topEdge, widthShare, , offset] = WEAR[item.id] || [];
     const img = garments[i];
