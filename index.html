@@ -493,7 +493,7 @@ const STYLES = [
   { id: "chain",      slot: "accessory", name: "chain necklace", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 45, colors: ["gold", "silver"], material: "recycled sterling silver or gold vermeil", tags: ["durable"] },
   { id: "belt",       slot: "accessory", name: "leather belt", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 50, colors: ["brown", "black", "white"], material: "full-grain leather", tags: ["durable"] },
   { id: "watch",      slot: "accessory", name: "minimal watch", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 120, colors: ["gold", "silver"], material: "stainless steel", tags: ["durable"] },
-  { id: "crossbody",  slot: "accessory", name: "crossbody bag", fit: "regular", sil: EVEN, occ: ["casual", "night", "weekend", "work"], dept: BOTH, base: 60, colors: LAYER_COLORS, material: "recycled nylon", tags: ["sustainable", "trend"] },
+  { id: "top-handle", slot: "accessory", name: "structured top-handle bag", fit: "regular", sil: EVEN, occ: ["casual", "night", "weekend", "work"], dept: BOTH, base: 140, colors: LAYER_COLORS, material: "smooth leather", tags: ["durable", "trend"] },
   { id: "scarf",      slot: "accessory", name: "wool scarf", fit: "regular", sil: EVEN, occ: ["work", "weekend", "casual"], dept: BOTH, base: 40, colors: LAYER_COLORS, material: "recycled wool", tags: ["sustainable", "durable"] },
   { id: "cap",        slot: "accessory", name: "six-panel cap", fit: "regular", sil: EVEN, occ: ["gym", "athleisure", "casual", "weekend"], dept: BOTH, base: 28, colors: LAYER_COLORS, material: "organic cotton twill", tags: ["sustainable"] }
 ];
@@ -514,6 +514,7 @@ const TRENDS = {
   "crop-puffer":   { k: true, note: "Shorter outerwear is a focus on Korean platforms" },
   "beanie":        { k: true, note: "Beanies are a steady best-seller category in K-fashion" },
   "tote":          { k: true, note: "Large, slouchy bags showed up at Seoul Fashion Week SS27" },
+  "top-handle":    { note: "Structured top-handle bags, carried in the hand, are a fall 2026 favorite" },
   "barn":          { note: "Barn jackets are replacing shackets in fall 2026 forecasts" },
   "suede":         { note: "Chocolate suede is a key fall 2026 jacket, worn short over a fuller leg" },
   "tall-boot":     { note: "Knee-high boots under a midi skirt are a fall 2026 staple" },
@@ -541,12 +542,12 @@ const PHOTO_COLORS = {
   "str-pant": "red", "track-pant": "camel", "midi-skirt": "rust", "maxi-skirt": "beige", "wide-pant": "olive", "pleat-wide": "olive",
   "cargo": "olive", "parachute": "camel", "wide-jean": "slate", "wide-sweat": "grey", "gym-short": "grey", "chunky-snk": "beige",
   "low-snk": "white", "runner": "white", "loafer": "black", "chelsea": "camel", "strap-heel": "beige", "blazer": "black",
-  "power-blazer": "black", "chore": "camel", "track-top": "cobalt", "trench": "beige", "crop-puffer": "black", "crossbody": "black",
+  "power-blazer": "black", "chore": "camel", "track-top": "cobalt", "trench": "beige", "crop-puffer": "black",
   "tote": "beige", "scarf": "rust", "cap": "white", "beanie": "olive"
 };
 
 /* One record per style + color + price tier. */
-const CATALOG = STYLES.flatMap(style => [...new Set([...(["shoes", "layer"].includes(style.slot) || ["cap", "beanie", "crossbody", "tote", "hobo"].includes(style.id) ? ALL : style.colors), PHOTO_COLORS[style.id]])].filter(Boolean).flatMap(color => Object.keys(TIERS).map(tier => ({
+const CATALOG = STYLES.flatMap(style => [...new Set([...(["shoes", "layer"].includes(style.slot) || ["cap", "beanie", "top-handle", "tote", "hobo"].includes(style.id) ? ALL : style.colors), PHOTO_COLORS[style.id]])].filter(Boolean).flatMap(color => Object.keys(TIERS).map(tier => ({
   ...style,
   key: `${style.id}|${color}|${tier}`,
   color,
@@ -675,7 +676,7 @@ const ACCESSORIES = {
   none:    { label: "None",    ids: [] },
   hat:     { label: "Hat",     ids: ["cap", "beanie"] },
   jewelry: { label: "Jewelry", ids: ["chain"] },
-  bag:     { label: "Bag",     ids: ["crossbody", "tote", "hobo"] },
+  bag:     { label: "Bag",     ids: ["top-handle", "tote", "hobo"] },
   belt:    { label: "Belt",    ids: ["belt"] },
   watch:   { label: "Watch",   ids: ["watch"] }
 };
@@ -780,8 +781,6 @@ function coatColorFor(top, bottom, coat) {
    sneakers echo the knit, white under light knits and black under dark ones. */
 const LEATHER = ["loafer", "chelsea", "tall-boot"];
 function shoeColor(id, top, bottom) {
-  // Knee-high boots come in the colors photographed so far.
-  if (id === "tall-boot" && !REAL_SHOES["tall-boot|black"]) return "brown";
   if (LEATHER.includes(id)) return [top, bottom].includes("black") || ["grey", "plum", "lavender", "blush"].includes(top) ? "black" : "brown";
   return isLight(top) ? "white" : "black";
 }
@@ -817,9 +816,9 @@ function fitsFormula(item, ctx) {
   if (item.slot === "accessory") {
     const pick = ACCESSORIES[ctx.accessory] || ACCESSORIES.none;
     if (!pick.ids.includes(item.id)) return false;
-    // Hobo bags suit softer styles, crossbody bags the sportier ones.
-    if (["hobo", "crossbody", "tote"].includes(item.id)) {
-      const bag = { bohemian: "hobo", classic: "hobo", minimalist: "crossbody", streetwear: "crossbody", athleisure: "tote" }[ctx.style] || "crossbody";
+    // Hobo bags suit softer styles, structured top-handle bags the sharper ones.
+    if (["hobo", "top-handle", "tote"].includes(item.id)) {
+      const bag = { bohemian: "hobo", classic: "hobo", minimalist: "top-handle", streetwear: "top-handle", athleisure: "tote" }[ctx.style] || "top-handle";
       return item.id === bag && !!shoes && item.color === shoes.color;
     }
     if (item.id === "chain") return item.color === (ctx.style === "bohemian" ? "gold" : "silver");
@@ -1277,7 +1276,7 @@ const WEAR = {
   "blazer": ["blazer", .125, 1.82], "power-blazer": ["power-blazer", .12, 1.98], "chore": ["chore-jacket", .125, 1.9], "track-top": ["track-jacket", .125, 1.85],
   "trench": ["trench", .12, 1.95], "crop-puffer": ["puffer", .12, 1.98],
   "barn": ["barn-jacket", .125, 1.9], "suede": ["suede-jacket", .125, 1.9], "overcoat": ["overcoat", .12, 1.95],
-  "crossbody": ["crossbody-bag", .4, .44, null, -.5], "tote": ["tote", .45, .6, null, .64], "scarf": ["scarf", .125, .44], "cap": ["cap", -.012, .46], "beanie": ["beanie", -.008, .4]
+  "top-handle": ["top-handle-bag", .445, .52, null, .53], "tote": ["tote", .45, .6, null, .64], "scarf": ["scarf", .125, .44], "cap": ["cap", -.012, .46], "beanie": ["beanie", -.008, .4]
 };
 
 /* Shoes photographed in their real color. These are drawn as-is, never tinted. */
@@ -1286,7 +1285,7 @@ const REAL_SHOES = {
   "chunky-snk|white": "chunky-snk-white", "chunky-snk|black": "chunky-snk-black",
   "chelsea|brown": "chelsea-brown", "chelsea|black": "chelsea-black",
   "runner|white": "runner-white", "runner|black": "runner-black",
-  "tall-boot|brown": "tall-boot-brown"
+  "tall-boot|brown": "tall-boot-brown", "tall-boot|black": "tall-boot-black"
 };
 /* Accessories photographed in their real color, drawn as-is. */
 const REAL_ACCESSORIES = { "chain|gold": "chain-gold", "chain|silver": "chain-silver" };
@@ -1718,7 +1717,7 @@ function stylingDetails(outfit) {
     const tip = { cap: "Wear the cap facing forward and slightly low.", beanie: "Fold the beanie cuff once and wear it back from the forehead.",
       chain: "Wear the chain over the knit, just below the collar.", belt: "Half-tuck the front of the knit so the belt shows.",
       watch: "Wear the watch on your non-writing wrist, just past the knit's cuff.", hobo: "Carry the hobo bag on the shoulder opposite your bag hand.",
-      crossbody: "Wear the crossbody bag high on the hip, strap across the body.", tote: "Carry the tote in the hand, or on the shoulder over the coat." }[accessory.id];
+      "top-handle": "Carry the top-handle bag in the hand, arm relaxed at your side.", tote: "Carry the tote in the hand, or on the shoulder over the coat." }[accessory.id];
     if (tip) notes.push(tip);
   }
   return notes;
