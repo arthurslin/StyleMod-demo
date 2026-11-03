@@ -469,6 +469,7 @@ const STYLES = [
   { id: "runner",     slot: "shoes", name: "lightweight runners", fit: "regular", sil: ["balanced", "big-top", "small-top"], occ: ["gym", "athleisure", "weekend"], dept: BOTH, base: 90, colors: SHOE_COLORS, material: "recycled knit", tags: ["sustainable"], note: "keep the outfit light and easy to move in" },
   { id: "loafer",     slot: "shoes", name: "leather loafers", fit: "regular", sil: ["balanced", "big-top", "small-top"], occ: ["work", "night"], dept: BOTH, base: 110, colors: ["black", "camel", "rust", "navy"], material: "full-grain leather", tags: ["durable"], note: "finish the outfit with a low, polished shape" },
   { id: "chelsea",    slot: "shoes", name: "Chelsea boots", fit: "regular", sil: ["balanced", "big-top"], occ: ["work", "night", "weekend"], dept: BOTH, base: 125, colors: ["black", "camel", "rust", "grey"], material: "resoleable leather", tags: ["durable"], note: "give the leg line a clean finish at the ankle" },
+  { id: "tall-boot",  slot: "shoes", name: "knee-high boots", fit: "regular", sil: ["small-top", "balanced", "big-top"], occ: ["work", "night", "casual", "weekend"], dept: W, base: 180, colors: ["brown", "black"], material: "smooth full-grain leather", tags: ["durable", "trend"], note: "cover the calf, so the midi skirt meets the boot with no gap" },
   { id: "strap-heel", slot: "shoes", name: "block-heel sandals", fit: "regular", sil: ["small-top", "balanced"], occ: ["night", "work"], dept: W, base: 95, colors: ["black", "beige", "camel", "red"], material: "leather", tags: ["trend"], note: "add a little height under the hem" },
 
   // Layers and accessories
@@ -515,6 +516,7 @@ const TRENDS = {
   "tote":          { k: true, note: "Large, slouchy bags showed up at Seoul Fashion Week SS27" },
   "barn":          { note: "Barn jackets are replacing shackets in fall 2026 forecasts" },
   "suede":         { note: "Chocolate suede is a key fall 2026 jacket, worn short over a fuller leg" },
+  "tall-boot":     { note: "Knee-high boots under a midi skirt are a fall 2026 staple" },
   "overcoat":      { note: "Roomy, knee-length raglan coats lead fall 2026 outerwear" },
   "peplum":        { note: "Peplum was the headline shape of the SS27 runways" },
   "blazer":        { note: "A generous blazer is a core part of the model off-duty uniform" },
@@ -566,7 +568,7 @@ const CATALOG = STYLES.flatMap(style => [...new Set([...(["shoes", "layer"].incl
 const BRANDS_KOREAN = { value: "Musinsa Standard, 8Seconds, Spao", mid: "Covernat, thisisneverthat, Mardi Mercredi", premium: "Andersson Bell, Ader Error, Wooyoungmi" };
 const BRANDS_GYM = { value: "Old Navy, Decathlon, Uniqlo", mid: "Gymshark, Nike, Under Armour", premium: "Lululemon, Alo Yoga, Rhone" };
 const BRANDS_LEATHER = { value: "Clarks, Florsheim, Steve Madden", mid: "Dr. Martens, Cole Haan, Blundstone", premium: "Grenson, R.M. Williams, Allen Edmonds" };
-const brandsFor = item => ["loafer", "chelsea"].includes(item.id) ? BRANDS_LEATHER : item.korean ? BRANDS_KOREAN : item.occ[0] === "gym" && item.slot !== "shoes" ? BRANDS_GYM : BRANDS[item.slot];
+const brandsFor = item => ["loafer", "chelsea", "tall-boot"].includes(item.id) ? BRANDS_LEATHER : item.korean ? BRANDS_KOREAN : item.occ[0] === "gym" && item.slot !== "shoes" ? BRANDS_GYM : BRANDS[item.slot];
 
 const BY_KEY = new Map(CATALOG.map(item => [item.key, item]));
 
@@ -682,7 +684,7 @@ const ANY_CUT = ["str-pant", "wide-pant", "cargo", "track-pant"];
 
 /* Proportion, per stylists: put volume in one place. Each style has three shapes,
    so the three outfits never share a silhouette:
-   - solo: the knit on its own as the hero piece, a tee hem at the waist;
+   - solo: the knit on its own as the hero piece;
    - short: a waist or hip-length jacket over a fuller leg (about a third over two thirds);
    - long: a knee-length coat over a straighter, narrower leg.
    On womenswear, `skirt` replaces the pants where a skirt suits the look. */
@@ -750,6 +752,8 @@ function recipeFor(ctx) {
   return looks[ctx.look === undefined ? 0 : ctx.look];
 }
 const bottomIds = (recipe, ctx) => ctx.a.dept === "womenswear" && recipe.skirt ? recipe.skirt : recipe.pants;
+/* A midi skirt always gets knee-high boots, so no bare calf shows below the hem. */
+const shoeIds = (recipe, ctx) => bottomIds(recipe, ctx).includes("midi-skirt") ? ["tall-boot"] : recipe.shoes;
 
 function luminance(color) {
   const v = parseInt(COLORS[color].hex.slice(1), 16);
@@ -774,8 +778,10 @@ function coatColorFor(top, bottom, coat) {
 
 /* Shoes: leather goes brown with warm colors and black with cool or black ones;
    sneakers echo the knit, white under light knits and black under dark ones. */
-const LEATHER = ["loafer", "chelsea"];
+const LEATHER = ["loafer", "chelsea", "tall-boot"];
 function shoeColor(id, top, bottom) {
+  // Knee-high boots come in the colors photographed so far.
+  if (id === "tall-boot" && !REAL_SHOES["tall-boot|black"]) return "brown";
   if (LEATHER.includes(id)) return [top, bottom].includes("black") || ["grey", "plum", "lavender", "blush"].includes(top) ? "black" : "brown";
   return isLight(top) ? "white" : "black";
 }
@@ -795,10 +801,10 @@ function fitsFormula(item, ctx) {
     // With no outer layer, the pants alone carry the contrast against the knit.
     if (!all && recipe.shape === "solo" && (isLight(item.color) === isLight(ctx.bread) || lumGap(item.color, ctx.bread) < .1)) return false;
     // The pants never repeat the shoe color, so the leg stands apart from the foot.
-    return all || ctx.anyCut || recipe.shoes.some(id => shoeColor(id, ctx.bread, item.color) !== item.color);
+    return all || ctx.anyCut || shoeIds(recipe, ctx).some(id => shoeColor(id, ctx.bread, item.color) !== item.color);
   }
   if (item.slot === "shoes") {
-    const ids = all ? looks.flatMap(l => l.shoes) : recipe.shoes;
+    const ids = all ? looks.flatMap(l => shoeIds(l, ctx)) : shoeIds(recipe, ctx);
     if (!ids.includes(item.id)) return false;
     if (all) return ["white", "brown", "black"].includes(item.color);
     return item.color === shoeColor(item.id, ctx.bread, bottomPick && bottomPick.color) && !(bottomPick && bottomPick.color === item.color);
@@ -1279,7 +1285,8 @@ const REAL_SHOES = {
   "low-snk|white": "low-snk-white", "low-snk|black": "low-snk-black", "loafer|brown": "loafer-brown", "loafer|black": "loafer-black",
   "chunky-snk|white": "chunky-snk-white", "chunky-snk|black": "chunky-snk-black",
   "chelsea|brown": "chelsea-brown", "chelsea|black": "chelsea-black",
-  "runner|white": "runner-white", "runner|black": "runner-black"
+  "runner|white": "runner-white", "runner|black": "runner-black",
+  "tall-boot|brown": "tall-boot-brown"
 };
 /* Accessories photographed in their real color, drawn as-is. */
 const REAL_ACCESSORIES = { "chain|gold": "chain-gold", "chain|silver": "chain-silver" };
@@ -1517,7 +1524,7 @@ async function paintDummy(canvas, outfit) {
   const drawable = item => item.slot !== "accessory" || (WEAR[item.id] && !["belt", "watch"].includes(item.id)) || (item.id === "chain" && realAcc(item));
   const order = [shoes, bottom, top, layer, extra].filter(Boolean).filter(drawable);
   const real = item => (item.slot === "shoes" && REAL_SHOES[`${item.id}|${item.color}`]) || realAcc(item);
-  const [dummy, teeImg, ...garments] = await Promise.all([loadImage(form.src), loadImage("tee"), ...order.map(i => realAcc(i) ? loadShoe("../accessories/" + realAcc(i)) : real(i) ? loadShoe(real(i)) : loadImage(WEAR[i.id][0]))]);
+  const [dummy, ...garments] = await Promise.all([loadImage(form.src), ...order.map(i => realAcc(i) ? loadShoe("../accessories/" + realAcc(i)) : real(i) ? loadShoe(real(i)) : loadImage(WEAR[i.id][0]))]);
   const g = canvas.getContext("2d");
   g.clearRect(0, 0, CANVAS_W, CANVAS_H);
   // A slightly deeper tone and a soft shadow make the form read as solid on the light panel.
@@ -1531,8 +1538,9 @@ async function paintDummy(canvas, outfit) {
     g.save();
     g.globalCompositeOperation = "destination-out";
     // From the knee down: full-length pants and shoes cover this, so no bare leg shows around the shoe.
-    // Under a midi skirt the leg shows down to the shoe, so only the foot goes.
-    const midi = bottom && (WEAR[bottom.id] || [])[3] === "midi";
+    // Under a midi skirt the leg shows down to the shoe, so only the foot goes, unless
+    // knee-high boots cover the calf.
+    const midi = bottom && (WEAR[bottom.id] || [])[3] === "midi" && shoes.id !== "tall-boot";
     g.fillRect(0, midi ? m.ankleY - (m.ankleY - m.crotchY) * .04 : m.crotchY + (m.ankleY - m.crotchY) * .5, CANVAS_W, CANVAS_H);
     g.restore();
   }
@@ -1564,7 +1572,10 @@ async function paintDummy(canvas, outfit) {
         "chore": m.crotchY + CANVAS_H * .035, "blazer": m.crotchY + CANVAS_H * .05, "power-blazer": m.crotchY + CANVAS_H * .06,
         "trench": m.crotchY + legSpan * .5, "shell": m.crotchY + CANVAS_H * .03, "fleece-jacket": m.crotchY + CANVAS_H * .01, "moto": m.waistY + CANVAS_H * .07, "crop-puffer": m.waistY + CANVAS_H * .04, "track-top": m.crotchY,
         "barn": m.crotchY + CANVAS_H * .04, "suede": m.waistY + CANVAS_H * .05, "overcoat": m.crotchY + legSpan * .56
-      }[item.id] || m.crotchY - CANVAS_H * .025;
+      }[item.id] || (form === FORMS.womenswear
+        // On the womenswear form the knit ends at the high hip, so it skims the body instead of hanging boxy.
+        ? m.waistY + (m.crotchY - m.waistY) * .55
+        : m.crotchY - CANVAS_H * .025);
       // Length sets the vertical scale. Across, the garment's shoulder line matches the
       // dummy's shoulders (plus room to wear it), within a small stretch so nothing distorts.
       const sy = (hem - y) / img.height;
@@ -1590,10 +1601,15 @@ async function paintDummy(canvas, outfit) {
         const pb = placeBottom(pantsImg, bottom, m, m.footY - pairH + 6 + pairH * .3);
         legs = legRuns(pantsImg).map(r => ({ c: pb.x + r.c * pb.width, w: r.w * pb.width }));
       }
-      const gap = shoeGap(img);
       let shoeTop = CANVAS_H;
       // Feet don't change with the pants: one scale for both shoes, set by the body.
-      const scale = (m.hipW * .88) / img.width;
+      // Knee-high boots are sized by height instead, so the shaft tucks just under the skirt hem.
+      const skirtBox = skirt && pantsImg && placeBottom(pantsImg, bottom, m);
+      // The hem is scalloped, so the shaft top goes above its highest curve.
+      const skirtHem = skirtBox && skirtBox.y + skirtBox.height * .9;
+      const scale = item.id === "tall-boot" && skirtHem
+        ? (m.footY + 6 - skirtHem) / img.height
+        : (m.hipW * .88) / img.width;
       // A real pair is a mirror image: take the fuller shoe of the photo (the one the split
       // didn't cut into) and mirror it for the other foot, so both are complete and match.
       const halves = shoeHalves(img);
@@ -1641,18 +1657,6 @@ async function paintDummy(canvas, outfit) {
     }
     const art = real(item) ? img : tinted(img, COLORS[item.color].hex);
     const coated = layer && JACKET_IDS.includes(layer.id);
-    if (item === top && showsTee(outfit)) {
-      // A tee peeks about 2cm below the knit's hem: the knit and tee become one layer.
-      const layered = document.createElement("canvas");
-      layered.width = CANVAS_W; layered.height = CANVAS_H;
-      const l = layered.getContext("2d");
-      const teeW = box.width * .72, teeTop = box.y + box.height * .1, teeBottom = box.y + box.height + CANVAS_H * .012;
-      l.drawImage(tinted(teeImg, COLORS[isLight(top.color) ? "grey" : "white"].hex), MID - teeW / 2, teeTop, teeW, teeBottom - teeTop);
-      l.drawImage(art, box.x, box.y, box.width, box.height);
-      if (coated) { drawn.top = { art: layered, box: { x: 0, y: box.y, width: CANVAS_W, height: CANVAS_H - box.y }, full: true }; return; }
-      g.drawImage(layered, 0, 0);
-      return;
-    }
     // Under a coat, the top waits until the coat is drawn.
     if (item === top && coated) { drawn.top = { art, box }; return; }
     g.drawImage(art, box.x, box.y, box.width, box.height);
@@ -1662,7 +1666,7 @@ async function paintDummy(canvas, outfit) {
       under.width = CANVAS_W; under.height = CANVAS_H;
       const u = under.getContext("2d");
       const t = drawn.top.box;
-      if (drawn.top.full) u.drawImage(drawn.top.art, 0, 0); else u.drawImage(drawn.top.art, t.x, t.y, t.width, t.height);
+      u.drawImage(drawn.top.art, t.x, t.y, t.width, t.height);
       u.globalCompositeOperation = "destination-in";
       u.drawImage(art, box.x, box.y, box.width, box.height);
       const opening = m.chestW * .3;
@@ -1680,18 +1684,12 @@ async function paintDummy(canvas, outfit) {
         g.beginPath();
         g.rect(0, coatHem - 2, CANVAS_W, t.y + t.height - coatHem + 2);
         g.clip();
-        if (drawn.top.full) g.drawImage(drawn.top.art, 0, 0); else g.drawImage(drawn.top.art, t.x, t.y, t.width, t.height);
+        g.drawImage(drawn.top.art, t.x, t.y, t.width, t.height);
         g.restore();
       }
     }
   });
 }
-
-/* A tee hem under the knit, except for sporty looks where the zip is worn on its own,
-   and over a skirt, where the knit sits clean on the waistband. */
-const showsTee = outfit => outfit.style !== "athleisure" && outfit.items.top && outfit.items.top.id.startsWith("quarter-zip")
-  && !(outfit.items.layer && JACKET_IDS.includes(outfit.items.layer.id))
-  && !(outfit.items.bottom && ["midi", "ankle", "knee"].includes((WEAR[outfit.items.bottom.id] || [])[3]));
 
 /* Practical styling notes for each look, built from the pieces in it. */
 function stylingDetails(outfit) {
@@ -1701,14 +1699,14 @@ function stylingDetails(outfit) {
   notes.push(top.id.includes("short")
     ? `Zip the ${c(top)} collar about halfway so it sits open at the neck.`
     : `Zip the ${c(top)} collar about halfway and push the sleeves up slightly at the wrist.`);
-  if (showsTee(outfit)) notes.push(`Let a ${isLight(top.color) ? "grey" : "white"} tee show about 2cm below the knit's hem for a clean layered line.`);
   const cut = bottom.id;
   if (["wide-pant", "pleat-wide", "extra-wide-jean", "wide-jean", "wide-sweat", "parachute", "cargo"].includes(cut)) notes.push(`Let the ${bottom.name} fall straight and skim the top of the shoe, with no cuff.`);
   else if (cut === "stacked-jean") notes.push("Let the extra length stack in soft folds just above the shoe.");
   else if (["tapered-jog", "track-pant"].includes(cut)) notes.push(`Sit the ${bottom.name} cuff just above the ankle so the shoe stays visible.`);
   else notes.push(`Wear the ${bottom.name} with a slight break, or one small cuff to show the shoe.`);
   const leather = ["loafer", "chelsea"].includes(shoes.id);
-  notes.push(leather
+  if (shoes.id === "tall-boot") notes.push(`Let the skirt hem fall just over the top of the ${c(shoes)} boots, so no leg shows between them.`);
+  else notes.push(leather
     ? `Pair the ${c(shoes)} ${shoes.name} with thin socks in ${c(bottom)} or ${shoes.color === "brown" ? "brown" : "black"}, so the leg line runs into the shoe.`
     : `Wear ${shoes.color === "white" ? "white crew or no-show" : "black crew"} socks with the ${shoes.name}.`);
   if (layer) notes.push(["suede", "moto", "crop-puffer"].includes(layer.id)
