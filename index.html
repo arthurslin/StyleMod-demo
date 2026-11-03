@@ -136,6 +136,13 @@
   .chip input:checked + span { background: var(--ink); border-color: var(--ink); color: var(--on-ink); text-decoration: line-through; }
   .chip input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
 
+  .color-picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+  .color-pick { position: relative; cursor: pointer; }
+  .color-pick input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .color-pick span { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); font-size: .9rem; }
+  .color-pick i { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--swatch-line); }
+  .color-pick input:checked + span { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); background: var(--accent-soft); font-weight: 600; }
+  .color-pick input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
   .note { margin-top: 12px; padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--sunken); font-size: .925rem; }
 
   /* Budget */
@@ -538,7 +545,8 @@ const BRANDS = {
 const defaultAnswers = () => ({
   dept: "unisex", occasions: [], palettes: [], avoid: [],
   body: "unsure", fit: "regular", silhouette: "surprise",
-  budget: [100, 400], sustainable: false, durable: false, trend: false, kstyle: false,
+  budget: [100, 800], sustainable: false, durable: false, trend: true, kstyle: false,
+  favorite: "",
   consent: true
 });
 const emptyFeedback = () => ({ colors: {}, styles: {}, sils: [], log: [] });
@@ -552,7 +560,7 @@ let openFeedback = null;       // index of the outfit asking "why?"
 let nextId = 1;
 let sortBy = "match";          // "match" | "low" | "high"
 
-const STEP_COUNT = 5;
+const STEP_COUNT = 3;
 const BUDGET_MIN = 100, BUDGET_MAX = 800, BUDGET_GAP = 50;
 const personalized = () => answers.consent;
 /* With personalization off, the engine sees defaults, not the customer's answers. */
@@ -635,6 +643,8 @@ function score(item, ctx) {
   if (item.id === "chunky-snk" && ctx.silhouette === "small-top") total += 2;
   if (a.trend && item.color === "cobalt") total += 1;
   if (item.photo) total += 3;
+  if (item.color === a.favorite && (item.slot === "top" || item.slot === "bottom") && !chosen.some(c => c.color === a.favorite)) total += 7;
+  if (a.favorite && item.color === a.favorite && chosen.some(c => c.color === a.favorite)) total -= 6;
 
   total -= 8 * (feedback.colors[item.color] || 0);
   total -= 8 * (feedback.styles[item.id] || 0);
@@ -837,7 +847,8 @@ function colorText(outfit, a) {
   const inPalette = pair.filter(c => a.palettes.includes(COLORS[c].family));
   const matched = [...new Set(inPalette.map(c => COLORS[c].family))];
   let text;
-  if (!a.palettes.length) text = "You didn't pick a palette, so we kept the colors versatile.";
+  if (a.favorite) text = `Built around the ${COLORS[a.favorite].label.toLowerCase()} you picked.`;
+  else if (!a.palettes.length) text = "You didn't pick a palette, so we kept the colors versatile.";
   else if (matched.length) text = `The ${names(inPalette.map(c => COLORS[c].label.toLowerCase()))} ${inPalette.length > 1 ? "fit" : "fits"} the ${names(matched.map(f => PALETTES[f].label))} you picked.`;
   else text = "These colors step outside the palettes you picked. Swap any piece to try another option.";
   if (a.avoid.length && !outfit.relaxedAvoid) text += " Nothing here uses the colors you avoid.";
@@ -1066,15 +1077,13 @@ function option(type, name, value, label, desc, checked, inner = "") {
 
 function renderIntro() {
   return `<div class="wrap fade">
-    <p class="eyebrow">Five quick questions</p>
+    <p class="eyebrow">Three quick questions</p>
     <h1 class="intro-title" tabindex="-1">Outfits built from what you tell us.</h1>
     <p class="lede">Answer a short quiz and get three complete looks, each with a plain-language reason it was chosen for you.</p>
     <ol class="intro-steps">
-      <li><b>1</b> Occasion and vibe</li>
-      <li><b>2</b> Color palette</li>
-      <li><b>3</b> Body shape and fit goals (optional)</li>
-      <li><b>4</b> Budget and shopping preferences</li>
-      <li><b>5</b> Review and consent</li>
+      <li><b>1</b> Pick a color</li>
+      <li><b>2</b> Choose a section</li>
+      <li><b>3</b> Pick an occasion</li>
     </ol>
     <button class="btn primary" data-action="start">Start the quiz</button>
     <div class="intro-panel">${howWePersonalize()}</div>
@@ -1083,72 +1092,26 @@ function renderIntro() {
 
 const STEP_VIEWS = {
   1: () => ({
-    title: "What are you dressing for?",
-    hint: "Pick as many as you like.",
-    body: `<fieldset class="section"><legend>Occasion and vibe</legend>
-        <div class="opts two">${Object.entries(OCCASIONS).map(([k, v]) => option("checkbox", "occasions", k, v, "", answers.occasions.includes(k))).join("")}</div>
-      </fieldset>
-      <fieldset class="section"><legend>Which section should we shop?</legend>
-        <p class="hint">Your choice alone sets this. We never infer it from anything else.</p>
-        <div class="opts three">${Object.entries(DEPTS).map(([k, v]) => option("radio", "dept", k, v, "", answers.dept === k)).join("")}</div>
+    title: "Pick a color",
+    hint: "We'll build your outfits around it.",
+    body: `<fieldset class="section"><legend class="sr">Favorite color</legend>
+        <div class="color-picks">${ALL.map(c => `<label class="color-pick"><input type="radio" name="favorite" value="${c}" ${answers.favorite === c ? "checked" : ""}><span><i style="background:${COLORS[c].hex}" aria-hidden="true"></i>${COLORS[c].label}</span></label>`).join("")}</div>
       </fieldset>`
   }),
   2: () => ({
-    title: "Which colors feel like you?",
-    hint: "Pick one or more palettes, then mark any colors to skip.",
-    body: `<fieldset class="section"><legend>Color palette</legend>
-        <div class="opts two">${Object.entries(PALETTES).map(([k, p]) => option("checkbox", "palettes", k, p.label, p.colors.map(c => COLORS[c].label.toLowerCase()).join(", "), answers.palettes.includes(k),
-          `<span class="swatches" aria-hidden="true">${p.colors.map(c => `<i style="background:${COLORS[c].hex}"></i>`).join("")}</span>`)).join("")}</div>
-      </fieldset>
-      <fieldset class="section"><legend>Colors I avoid</legend>
-        <p class="hint">These won't appear in your outfits.</p>
-        <div class="chips">${ALL.map(c => `<label class="chip"><input type="checkbox" name="avoid" value="${c}" ${answers.avoid.includes(c) ? "checked" : ""}><span><i style="background:${COLORS[c].hex}" aria-hidden="true"></i>${COLORS[c].label}</span></label>`).join("")}</div>
+    title: "Who are we dressing?",
+    hint: "This sets the section and the dummy. We never infer it.",
+    body: `<fieldset class="section"><legend class="sr">Section</legend>
+        <div class="opts">${Object.entries(DEPTS).map(([k, v]) => option("radio", "dept", k, v, "", answers.dept === k)).join("")}</div>
       </fieldset>`
   }),
   3: () => ({
-    title: "How do you like clothes to fit?",
-    hint: "This step is optional. Skip anything you'd rather not answer.",
-    body: `<fieldset class="section"><legend>Body type (optional)</legend>
-        <p class="hint">Used only for the fit notes on your results. It doesn't change which products you see.</p>
-        <div class="opts two">${Object.entries(BODY_TYPES).map(([k, b]) => option("radio", "body", k, b.label, b.desc, answers.body === k)).join("")}</div>
-        <p class="note">Body types are a guide, not a rule. You decide what feels good.</p>
-      </fieldset>
-      <fieldset class="section"><legend>Fit preference</legend>
-        <div class="opts three">${Object.entries(FITS).map(([k, v]) => option("radio", "fit", k, v, "", answers.fit === k)).join("")}</div>
-      </fieldset>
-      <fieldset class="section"><legend>Silhouette goal</legend>
-        <div class="opts">${Object.entries(SILHOUETTES).map(([k, s]) => option("radio", "silhouette", k, s.label, s.desc, answers.silhouette === k)).join("")}</div>
+    title: "Where are you headed?",
+    hint: "Pick the one that fits best.",
+    body: `<fieldset class="section"><legend class="sr">Occasion</legend>
+        <div class="opts">${Object.entries(OCCASIONS).map(([k, v]) => option("radio", "occasion", k, v, "", answers.occasions[0] === k)).join("")}</div>
       </fieldset>`
-  }),
-  4: () => ({
-    title: "What's your budget?",
-    hint: "Per complete outfit, in placeholder prices.",
-    body: `<div class="section">
-        <p class="section-title">Price range</p>
-        <p class="budget-value" id="budgetValue">${budgetLabel()}</p>
-        <div class="range">
-          <div class="range-fill" id="rangeFill"></div>
-          <input type="range" id="budgetLow" min="${BUDGET_MIN}" max="${BUDGET_MAX}" step="25" value="${answers.budget[0]}" aria-label="Minimum budget per outfit">
-          <input type="range" id="budgetHigh" min="${BUDGET_MIN}" max="${BUDGET_MAX}" step="25" value="${answers.budget[1]}" aria-label="Maximum budget per outfit">
-        </div>
-        <div class="range-ends"><span>$${BUDGET_MIN}</span><span>$${BUDGET_MAX}</span></div>
-      </div>
-      <div class="section">
-        <p class="section-title">Shopping preferences</p>
-        ${Object.entries(PREFS).map(([k, p]) => `<label class="switch"><span>${p.label}<small>${p.desc}</small></span><input type="checkbox" role="switch" name="pref" value="${k}" ${answers[k] ? "checked" : ""}></label>`).join("")}
-      </div>`
-  }),
-  5: () => {
-    const stepOf = { "Shopping in": 1, "Occasions": 1, "Palettes": 2, "Colors to avoid": 2, "Body type": 3, "Fit": 3, "Silhouette goal": 3, "Budget per outfit": 4, "Shopping preferences": 4 };
-    return {
-      title: "Does this look right?",
-      hint: "Review your answers before we build your outfits.",
-      body: `<dl class="review">${describeAnswers().map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd>
-          <button class="link" data-action="goto" data-step="${stepOf[label]}" aria-label="Edit ${label}">Edit</button></div>`).join("")}</dl>
-        <label class="consent"><input type="checkbox" name="consent" ${answers.consent ? "checked" : ""}>
-          <span>Use only the answers I gave here to personalize my results.<small>No other data is used. Uncheck this to see general picks instead.</small></span></label>`
-    };
-  }
+  })
 };
 
 function budgetLabel() {
@@ -1337,6 +1300,10 @@ app.addEventListener("change", event => {
   if (["occasions", "palettes", "avoid"].includes(input.name)) toggleIn(answers[input.name], input.value, input.checked);
   else if (input.name === "pref") answers[input.value] = input.checked;
   else if (input.name === "consent") answers.consent = input.checked;
+  else if (input.name === "favorite") {
+    answers.favorite = input.value;
+    answers.palettes = [...new Set([COLORS[input.value].family, "neutral"])];
+  } else if (input.name === "occasion") answers.occasions = [input.value];
   else if (input.type === "radio") answers[input.name] = input.value;
 });
 
@@ -1376,6 +1343,7 @@ const actions = {
     toast("Outfits reordered.");
   },
   next()   {
+    if (view === 3 && !answers.occasions.length) answers.occasions = ["casual"];
     if (view < STEP_COUNT) { view += 1; render(); return; }
     generateAll();
     view = "results";
