@@ -1270,7 +1270,8 @@ function torsoWidth(img) {
 const legMarks = new Map();
 function legRuns(img) {
   if (!legMarks.has(img)) {
-    const solid = alphaOf(img), y = img.height - 4;
+    // Measure a little above the hem, where the edge is solid rather than ragged.
+    const solid = alphaOf(img), y = img.height * .93;
     const runs = [];
     for (let x = 0, start = -1; x <= img.width; x++) {
       const on = x < img.width && solid(x, y);
@@ -1278,6 +1279,10 @@ function legRuns(img) {
       if (!on && start >= 0) { runs.push([start, x]); start = -1; }
     }
     let legs = runs.sort((a, b) => (b[1] - b[0]) - (a[1] - a[0])).slice(0, 2).sort((a, b) => a[0] - b[0]);
+    // A believable leg is at least an eighth of the image wide; otherwise split the whole hem in two.
+    if (legs.length === 2 && legs.some(([a, b]) => b - a < img.width * .12)) {
+      legs = [[Math.min(legs[0][0], legs[1][0]), Math.max(legs[0][1], legs[1][1])]];
+    }
     if (legs.length < 2) {
       const [a, b] = legs[0] || [0, img.width], mid = (a + b) / 2;
       legs = [[a, mid], [mid, b]];
@@ -1424,10 +1429,12 @@ async function paintDummy(canvas, outfit) {
       }
       const gap = shoeGap(img);
       let shoeTop = CANVAS_H;
+      // Feet don't change with the pants: one scale for both shoes, set by the body.
+      const scale = (m.hipW * .88) / img.width;
       [[0, gap], [gap, img.width]].forEach(([from, to], side) => {
         const halfW = to - from;
-        const width = Math.min(m.hipW * .52, Math.max(m.hipW * .34, legs[side].w * 1.15));
-        const height = img.height * width / halfW;
+        const width = halfW * scale;
+        const height = img.height * scale;
         const y = m.footY - height + 6;
         g.drawImage(art, from, 0, halfW, img.height, legs[side].c - width / 2, y, width, height);
         shoeTop = Math.min(shoeTop, y + height * .3);
