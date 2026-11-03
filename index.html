@@ -433,7 +433,7 @@ const STYLES = [
   { id: "cig-pant",   slot: "bottom", name: "tailored narrow trousers", fit: "slim", sil: BIG_TOP, occ: ["work", "night"], dept: BOTH, base: 85, colors: ALL, material: "wool blend", tags: ["durable"] },
   { id: "tapered-jog",slot: "bottom", name: "tapered joggers", fit: "slim", sil: BIG_TOP, occ: ["gym", "athleisure", "weekend"], dept: BOTH, base: 55, colors: ALL, material: "recycled-poly knit", tags: ["sustainable"] },
   { id: "str-jean",   slot: "bottom", name: "straight jeans", fit: "regular", sil: EVEN, occ: ["casual", "weekend", "night"], dept: BOTH, base: 70, colors: ["black", "navy", "slate", "grey", "white"], material: "organic-cotton denim", tags: ["sustainable", "durable"] },
-  { id: "str-pant",   slot: "bottom", name: "straight trousers", fit: "regular", sil: EVEN, occ: ["work", "night"], dept: BOTH, base: 80, colors: ALL, material: "wool-blend twill", tags: ["durable"] },
+  { id: "str-pant",   slot: "bottom", name: "straight trousers", fit: "regular", sil: EVEN, occ: ["work", "night", "casual", "weekend"], dept: BOTH, base: 80, colors: ALL, material: "wool-blend twill", tags: ["durable"] },
   { id: "track-pant", slot: "bottom", name: "straight track pants", fit: "regular", sil: EVEN, occ: ["gym", "athleisure", "weekend"], dept: BOTH, base: 55, colors: ALL, material: "recycled nylon", tags: ["sustainable", "trend"] },
   { id: "midi-skirt", slot: "bottom", name: "midi slip skirt", fit: "regular", sil: EVEN, occ: ["work", "night"], dept: W, base: 65, colors: ALL, material: "satin-finish viscose", tags: ["trend"] },
   { id: "wide-pant",  slot: "bottom", name: "wide-leg trousers", fit: "relaxed", sil: SMALL_TOP, occ: ["work", "night", "casual"], dept: BOTH, base: 85, colors: ALL, material: "fluid TENCEL blend", tags: ["sustainable", "trend"] },
@@ -602,26 +602,48 @@ function budgetTier(a) {
   return mid < 200 ? "value" : mid < 480 ? "mid" : "premium";
 }
 
-/* The sandwich method: the same color at the top and the feet (the bread), with
-   contrasting jeans or khakis in the middle (the filling). */
+const ctx_gym = a => a.occasions.includes("gym");
+
+/* Simple contrast: a light top gets dark pants and light shoes, and a dark top
+   gets light pants and dark shoes. Pants come from colors that pair well with the
+   top, and each of the three looks changes the texture, cut and shoes. */
+const LIGHT = ["white", "beige", "grey", "sage", "camel", "mustard"];
+const PAIRS = {
+  white: ["navy", "black", "olive"], beige: ["navy", "black", "olive"], grey: ["black", "navy"],
+  sage: ["navy", "black", "slate"], camel: ["navy", "black"], mustard: ["navy", "black", "slate"],
+  black: ["beige", "grey", "white"], navy: ["beige", "white", "grey"], olive: ["beige", "white"],
+  slate: ["beige", "white"], rust: ["beige", "white"], red: ["beige", "white", "grey"], cobalt: ["white", "beige", "grey"]
+};
 const JEANS = ["str-jean", "slim-jean"];
 const KHAKIS = ["khakis", "slim-khakis"];
-const DENIM_COLORS = ["navy", "slate", "black"];
+const LOOKS = [
+  { tops: ["quarter-zip"], dark: ["str-jean", "slim-jean"], light: ["khakis", "slim-khakis"], shoes: ["low-snk", "chunky-snk"], lightShoes: ["white"], darkShoes: ["black"] },
+  { tops: ["quarter-zip-waffle", "quarter-zip-fleece"], dark: ["str-pant", "cig-pant"], light: ["str-jean", "slim-khakis"], shoes: ["loafer", "chelsea"], lightShoes: "top", darkShoes: "top" },
+  { tops: ["quarter-zip-cable"], dark: ["wide-pant", "cargo"], light: ["wide-pant", "khakis"], shoes: ["chelsea", "chunky-snk"], lightShoes: ["beige", "white"], darkShoes: ["rust", "black"] }
+];
+const isLight = color => LIGHT.includes(color);
 
 function fitsFormula(item, ctx) {
-  if (item.slot === "top") return item.id.startsWith("quarter-zip") && item.color === ctx.bread;
-  if (item.slot === "shoes") return item.color === ctx.bread;
+  const look = LOOKS[ctx.look === undefined ? 0 : ctx.look];
+  const light = isLight(ctx.bread);
+  if (item.slot === "top") return item.color === ctx.bread && (ctx.look === undefined ? item.id.startsWith("quarter-zip") : look.tops.includes(item.id));
   if (item.slot === "bottom") {
-    if (item.color === ctx.bread) return false;
-    const isJeans = JEANS.includes(item.id) && DENIM_COLORS.includes(item.color);
-    const isKhakis = KHAKIS.includes(item.id);
-    return ctx.jeans === undefined ? isJeans || isKhakis : ctx.jeans ? isJeans : isKhakis;
+    const ids = ctx.look === undefined ? LOOKS.flatMap(l => light ? l.dark : l.light) : light ? look.dark : look.light;
+    return ids.includes(item.id) && PAIRS[ctx.bread].includes(item.color);
+  }
+  if (item.slot === "shoes") {
+    const ids = ctx.gym ? ["runner", "chunky-snk"] : ctx.look === undefined ? LOOKS.flatMap(l => l.shoes) : look.shoes;
+    const colors = ctx.look === undefined ? [ctx.bread, ...(light ? ["white", "beige"] : ["black", "rust"])]
+      : (light ? look.lightShoes : look.darkShoes) === "top" ? [ctx.bread] : light ? look.lightShoes : look.darkShoes;
+    return ids.includes(item.id) && colors.includes(item.color);
   }
   return false;
 }
 
 /* Hard rules. Department comes only from the customer's explicit choice. */
 function pool(slot, ctx) {
+  // These looks have no layer, so there's nothing to relax.
+  if (slot === "layer") return [];
   const { a } = ctx;
   const matches = item => {
     if (item.slot !== slot) return false;
@@ -716,7 +738,8 @@ function buildOutfit(index, keepSilhouette) {
     hero: families[index % families.length],
     tier: budgetTier(a),
     bread: a.favorite || "navy",
-    jeans: index % 2 === 0
+    look: index % LOOKS.length,
+    gym: ctx_gym(a)
   };
 
   const items = {};
@@ -727,7 +750,7 @@ function buildOutfit(index, keepSilhouette) {
   if (personalized()) fitBudget(items, a);
 
   return {
-    id: nextId++, silhouette, occasion: ctx.occasion, items,
+    id: nextId++, silhouette, occasion: ctx.occasion, items, look: ctx.look,
     relaxedAvoid: !!ctx.relaxedAvoid, seen: new Set(), savedId: null
   };
 }
@@ -773,7 +796,7 @@ function swapItem(index, slot) {
   const room = a.budget[1] - rest.reduce((sum, i) => sum + i.price, 0);
   const ctx = {
     a, silhouette: outfit.silhouette, occasion: outfit.occasion, chosen: rest,
-    hero: null, tier: budgetTier(a), usedColors: new Set(), bread: a.favorite || "navy",
+    hero: null, tier: budgetTier(a), usedColors: new Set(), bread: a.favorite || "navy", look: outfit.look, gym: ctx_gym(a),
     usedStyles: new Set(current ? [current.id] : [])
   };
   const options = pool(slot, ctx).filter(i => !outfit.seen.has(`${i.id}|${i.color}`));
@@ -837,9 +860,9 @@ const isPlural = item => /s$/.test(item.name);
 
 function proportionText(outfit) {
   const { top, bottom, shoes } = outfit.items;
-  const bread = COLORS[top.color].label.toLowerCase();
-  const filling = `${COLORS[bottom.color].label.toLowerCase()} ${bottom.name}`;
-  return `This uses the sandwich method. The ${bread} ${top.name} and ${bread} ${shoes.name} are the bread, and the ${filling} are the filling. Repeating one color at the top and at your feet ties the outfit together, while the contrast in the middle keeps it interesting.`;
+  const c = label => COLORS[label].label.toLowerCase();
+  const pattern = isLight(top.color) ? "Light on top, dark in the middle, light at your feet." : "Dark on top, light in the middle, dark at your feet.";
+  return `${pattern} The ${c(bottom.color)} ${bottom.name} make the ${c(top.color)} ${top.name} and ${c(shoes.color)} ${shoes.name} stand out. ${cap(c(bottom.color))} and ${c(top.color)} are an easy, classic pairing.`;
 }
 
 function colorStory(outfit) {
@@ -1174,7 +1197,7 @@ function renderIntro() {
   return `<div class="wrap fade">
     <p class="eyebrow">Three quick questions</p>
     <h1 class="intro-title" tabindex="-1">Outfits built from what you tell us.</h1>
-    <p class="lede">Answer three taps and get three quarter-zip outfits, each styled with the sandwich method and a plain-language reason it was chosen for you.</p>
+    <p class="lede">Answer three quick questions and get three quarter-zip outfits with easy, high-contrast color pairings.</p>
     <ol class="intro-steps">
       <li><b>1</b> Pick a color</li>
       <li><b>2</b> Choose a section</li>
@@ -1188,7 +1211,7 @@ function renderIntro() {
 const STEP_VIEWS = {
   1: () => ({
     title: "Pick a color",
-    hint: "Your quarter zip and shoes will match it.",
+    hint: "Your quarter zip will be this color.",
     body: `<fieldset class="section"><legend class="sr">Favorite color</legend>
         <div class="color-picks">${ALL.map(c => `<label class="color-pick"><input type="radio" name="favorite" value="${c}" ${answers.favorite === c ? "checked" : ""}><span><i style="background:${COLORS[c].hex}" aria-hidden="true"></i>${COLORS[c].label}</span></label>`).join("")}</div>
       </fieldset>`
@@ -1251,8 +1274,8 @@ function renderOutfit(outfit, index) {
   return `<article class="card" id="outfit-${index}" aria-labelledby="outfit-title-${index}">
     <div class="card-head">
       <div>
-        <p class="eyebrow">Outfit ${index + 1} of ${outfits.length}</p>
-        <h3 class="card-title" id="outfit-title-${index}" tabindex="-1">${cap(COLORS[outfit.items.top.color].label.toLowerCase())} ${outfit.items.top.name} sandwich</h3>
+        <p class="eyebrow">${isLight(outfit.items.top.color) ? "Light · dark · light" : "Dark · light · dark"}</p>
+        <h3 class="card-title" id="outfit-title-${index}" tabindex="-1">Look ${index + 1}: ${COLORS[outfit.items.top.color].label} ${outfit.items.top.name}</h3>
         <p class="item-meta">${OCCASIONS[outfit.occasion]}</p>
         ${personalized() ? `<p class="match-note">${index === 0 && sortBy === "match" ? "<b>Best match.</b> " : ""}Meets ${matchChecks(outfit).met} of ${matchChecks(outfit).count} checks against your answers</p>` : ""}
       </div>
