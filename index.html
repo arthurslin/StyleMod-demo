@@ -542,7 +542,8 @@ const CATALOG = STYLES.flatMap(style => [...new Set([...(["shoes", "layer"].incl
   family: COLORS[color].family,
   tier,
   price: Math.round(style.base * TIER_MULT[tier]),
-  photo: color === PHOTO_COLORS[style.id] ? `images/${style.id}.jpg` : "",
+  photo: ["chain", "belt", "watch"].includes(style.id) ? `images/accessories/${style.id}-${color}.jpg`
+    : color === PHOTO_COLORS[style.id] ? `images/${style.id}.jpg` : "",
   trendNote: TRENDS[style.id] ? TRENDS[style.id].note : "",
   korean: !!(TRENDS[style.id] && TRENDS[style.id].k),
   tags: [...new Set([
@@ -1102,9 +1103,14 @@ const WEAR = {
 };
 
 /* Shoes photographed in their real color. These are drawn as-is, never tinted. */
-const REAL_SHOES = { "low-snk|white": "low-snk-white", "loafer|brown": "loafer-brown" };
+const REAL_SHOES = {
+  "low-snk|white": "low-snk-white", "loafer|brown": "loafer-brown", "loafer|black": "loafer-black",
+  "chunky-snk|white": "chunky-snk-white", "chunky-snk|black": "chunky-snk-black",
+  "chelsea|brown": "chelsea-brown", "chelsea|black": "chelsea-black",
+  "runner|white": "runner-white", "runner|black": "runner-black"
+};
 /* Accessories photographed in their real color, drawn as-is. */
-const REAL_ACCESSORIES = {};
+const REAL_ACCESSORIES = { "chain|gold": "chain-gold", "chain|silver": "chain-silver" };
 function loadShoe(name) {
   const key = "shoe:" + name;
   if (!imageCache[key]) {
@@ -1255,7 +1261,7 @@ async function paintDummy(canvas, outfit) {
   const m = formMarks[form.src] || (formMarks[form.src] = measureForm(dummy));
   const drawn = {};
   order.forEach((item, i) => {
-    const [, topEdge, widthShare, , offset] = WEAR[item.id];
+    const [, topEdge, widthShare, , offset] = WEAR[item.id] || [];
     const img = garments[i];
     let box;
     const jacket = JACKET_IDS.includes(item.id);
