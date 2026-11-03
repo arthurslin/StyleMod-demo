@@ -1621,36 +1621,26 @@ function garmentRun(img, share) {
 const garmentSpan = (img, share) => { const [l, r] = garmentEdges(img, share); return r - l; };
 const garmentMid = (img, share) => { const [l, r] = garmentEdges(img, share); return (l + r) / 2; };
 
-const garmentMarks = new Map();
-function waistbandWidth(img) {
-  if (!garmentMarks.has(img)) {
-    const solid = alphaOf(img), y = img.height * .07;
-    let n = 0;
-    for (let x = 0; x < img.width; x++) if (solid(x, y)) n++;
-    garmentMarks.set(img, n);
-  }
-  return garmentMarks.get(img);
-}
-
-/* Bottoms keep their own proportions: height sets the scale, and width only
-   stretches when the waistband would otherwise be narrower than the waist. */
-function placeBottom(img, item, m, shoeTop) {
+/* Bottoms keep their own proportions: height sets the scale, and width fits the hips. */
+function placeBottom(img, item, m, shoeTop, cap) {
   const [, , ease, length] = WEAR[item.id];
   const top = m.waistY - (m.crotchY - m.waistY) * .12;
   const legSpan = m.ankleY - m.crotchY;
   // Full-length pants end where the shoe starts, so both stay visible.
   const hem = { full: shoeTop || m.ankleY + (m.footY - m.ankleY) * .45, ankle: Math.min(m.ankleY, shoeTop || m.ankleY), midi: m.crotchY + legSpan * .72, knee: m.crotchY + legSpan * .42 }[length];
   const scale = (hem - top) / img.height;
-  let width = img.width * scale;
-  const band = waistbandWidth(img) * scale;
-  const minBand = m.waistW * 1.04;
-  if (band < minBand) width *= Math.min(1.25, minBand / band);
-  // Two legs side by side need at least the hips plus ease, but never balloon.
-  width = Math.min(Math.max(width, m.hipW * ease), img.width * scale * 1.6, m.hipW * ease * 1.5);
-  // At the hips the pants always cover the form, with a little room, even in a slim cut.
+  // Pants fit at the hips, like real ones: the photo's hip line matches the form's hips
+  // with a little room, and the legs below keep the cut the photo was made with, so a
+  // wide leg flares from the hip instead of the whole pair being stretched wide.
   const hipShare = Math.round((m.crotchY - CANVAS_H * .02 - top) / (hem - top) * 100) / 100;
+  // Relaxed cuts sit roomier at the hip than slim ones.
+  const room = Math.max(1.06, 1 + (ease - 1) * .55);
+  const fit = m.hipW * room / garmentSpan(img, hipShare);
+  // Within a small stretch of the photo's own proportions, so nothing distorts.
+  let width = img.width * Math.min(scale * 1.25, Math.max(scale * .85, fit));
+  // Under a knit the pants come out from under its hem, never wider than it.
   const hips = garmentSpan(img, hipShare) * width / img.width;
-  if (hips < m.hipW * 1.04) width *= Math.min(1.3, m.hipW * 1.04 / hips);
+  if (cap && hips > cap) width *= cap / hips;
   return { x: MID - width / 2, y: top, width, height: hem - top };
 }
 
@@ -1788,6 +1778,10 @@ async function paintDummy(canvas, outfit) {
   const coatArt = coat && tinted(coatImg, COLORS[coat.color].hex);
   const coatBox = coat && upperBox(coat, coatImg);
   const coatHemY = coat && coatBox.y + coatBox.height * hemShare(WEAR[coat.id][0]);
+  // The width of the knit's body at its hem, sleeves left out: pants come out from under it.
+  const topImg0 = top && garments[order.indexOf(top)];
+  const knit0 = topImg0 && upperBox(top, topImg0);
+  const waistCap = topImg0 && !coat ? garmentRun(topImg0, centerHem(topImg0) - .015) * knit0.width / topImg0.width * .96 : 0;
   order.forEach((item, i) => {
     const [, topEdge, widthShare, , offset] = WEAR[item.id] || [];
     const img = garments[i];
@@ -1804,7 +1798,7 @@ async function paintDummy(canvas, outfit) {
       g.restore();
     }
     if (item.slot === "bottom") {
-      box = placeBottom(img, item, m, drawn.shoeTop);
+      box = placeBottom(img, item, m, drawn.shoeTop, waistCap);
       const topImg = top && garments[order.indexOf(top)];
       if (topImg) {
         // The waistband sits under the knit's hem (or the jacket's, when the knit is tucked
@@ -1813,28 +1807,9 @@ async function paintDummy(canvas, outfit) {
         const cover = coat && WAIST_JACKETS.includes(coat.id) ? coatHemY : knit.y + knit.height * centerHem(topImg);
         g.save();
         g.beginPath();
-        g.rect(0, cover - CANVAS_H * .02, CANVAS_W, CANVAS_H);
+        g.rect(0, cover - 2, CANVAS_W, CANVAS_H);
         g.clip();
-        const art = tinted(img, COLORS[item.color].hex);
-        // A knit drapes over the hips, so the pants come out from inside its hem: at the hem
-        // they're a little narrower than the knit, easing back to their own cut by mid-thigh.
-        // Under a jacket the knit doesn't set the line, so the pants keep their shape.
-        const knitW = coat ? 0 : garmentRun(topImg, centerHem(topImg) - .015) * knit.width / topImg.width;
-        const pantsW = garmentSpan(img, Math.max(0, Math.round((cover - box.y) / box.height * 100) / 100)) * box.width / img.width;
-        const narrow = knitW && pantsW > knitW * .96 ? knitW * .96 / pantsW : 1;
-        if (narrow < 1) {
-          const ease = cover + (m.crotchY - cover) + CANVAS_H * .1;
-          const mid = box.x + box.width / 2, step = 3;
-          for (let y = 0; y < box.height; y += step) {
-            const at = box.y + y;
-            const t = Math.min(1, Math.max(0, (at - cover) / (ease - cover)));
-            const scale = narrow + (1 - narrow) * t * t * (3 - 2 * t);
-            const width = box.width * scale;
-            g.drawImage(art, 0, y / box.height * img.height, img.width, step / box.height * img.height, mid - width / 2, at, width, step + .5);
-          }
-        } else {
-          g.drawImage(art, box.x, box.y, box.width, box.height);
-        }
+        g.drawImage(tinted(img, COLORS[item.color].hex), box.x, box.y, box.width, box.height);
         g.restore();
         return;
       }
@@ -1853,13 +1828,13 @@ async function paintDummy(canvas, outfit) {
       const skirt = bottom && ["midi", "ankle", "knee"].includes((WEAR[bottom.id] || [])[3]);
       if (skirt) legs = m.ankles.map(c => ({ c, w: m.hipW * .4 }));
       else if (pantsImg) {
-        const pb = placeBottom(pantsImg, bottom, m, m.footY - pairH + 6 + pairH * .3);
+        const pb = placeBottom(pantsImg, bottom, m, m.footY - pairH + 6 + pairH * .3, waistCap);
         legs = legRuns(pantsImg).map(r => ({ c: pb.x + r.c * pb.width, w: r.w * pb.width }));
       }
       let shoeTop = CANVAS_H;
       // Feet don't change with the pants: one scale for both shoes, set by the body.
       // Knee-high boots are sized by height instead, so the shaft tucks just under the skirt hem.
-      const skirtBox = skirt && pantsImg && placeBottom(pantsImg, bottom, m);
+      const skirtBox = skirt && pantsImg && placeBottom(pantsImg, bottom, m, undefined, waistCap);
       // The hem is scalloped, so the shaft top goes above its highest curve.
       const skirtHem = skirtBox && skirtBox.y + skirtBox.height * .9;
       const scale = item.id === "tall-boot" && skirtHem
@@ -2076,7 +2051,7 @@ function renderIntro() {
   return `<div class="wrap fade">
     <p class="eyebrow">Five quick questions</p>
     <h1 class="intro-title" tabindex="-1">Your Style. Your Preferences. Your Rules.</h1>
-    <p class="lede">Answer five quick questions and get three quarter-zip outfits in your style, with easy color pairings.</p>
+    <p class="lede">Answer five quick questions and get three outfits in your style, with easy color pairings.</p>
     <ol class="intro-steps">
       <li><b>1</b> Gender</li>
       <li><b>2</b> Age range</li>
@@ -2109,7 +2084,7 @@ const STEP_VIEWS = {
   }),
   3: () => ({
     title: "Pick your palette",
-    hint: "Choose a palette, then the shade for your quarter zip.",
+    hint: "Choose a palette, then the color you want to wear most.",
     body: Object.entries(QUIZ_PALETTES).map(([k, pal]) => `<fieldset class="section palette-row"><legend>${pal.label}</legend>
         <div class="color-picks">${pal.colors.map(c => pick("favorite", c)).join("")}</div>
       </fieldset>`).join("")
