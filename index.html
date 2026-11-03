@@ -1181,13 +1181,16 @@ async function paintDummy(canvas, outfit) {
     const jacket = JACKET_IDS.includes(item.id);
     if (item.slot === "bottom") box = placeBottom(img, item, m);
     else if (item.slot === "top" || jacket) {
-      // The garment's own body width lands on the dummy's chest, plus room to wear it.
-      const ease = jacket ? 1.38 : item.id === "quarter-zip-cable" ? 1.2 : 1.14;
-      const under = item === top && layer && JACKET_IDS.includes(layer.id) ? .8 : 1;
-      // Jackets' sleeves meet the body where tops are measured, so jackets scale by arm span.
-      const width = jacket ? m.armSpan * 1.06 * WEAR[item.id][2] / 1.62 : img.width * (m.chestW * ease * under / torsoWidth(img));
-      const height = img.height * width / img.width;
-      box = { x: MID - width / 2, y: m.neckY - CANVAS_H * (jacket ? .03 : .022), width, height };
+      // Length sets the scale: collar at the neck, hem at a fixed point on the body.
+      // Width then follows the garment's own proportions, capped to the arm span.
+      const y = m.neckY - CANVAS_H * (jacket ? .03 : .022);
+      const legSpan = m.ankleY - m.crotchY;
+      const hem = {
+        "chore": m.crotchY + CANVAS_H * .035, "blazer": m.crotchY + CANVAS_H * .05, "power-blazer": m.crotchY + CANVAS_H * .06,
+        "trench": m.crotchY + legSpan * .5, "crop-puffer": m.waistY + CANVAS_H * .04, "track-top": m.crotchY
+      }[item.id] || m.crotchY - CANVAS_H * .025;
+      const scale = Math.min((hem - y) / img.height, m.armSpan * (jacket ? 1.3 : 1.1) / img.width);
+      box = { x: MID - img.width * scale / 2, y, width: img.width * scale, height: img.height * scale };
     } else if (item.slot === "shoes") {
       const width = m.feetW * (real(item) ? 1.32 : 1.25);
       const height = img.height * width / img.width;
@@ -1205,16 +1208,25 @@ async function paintDummy(canvas, outfit) {
       box = { x: MID - width / 2 + (offset || 0) * form.size, y, width, height };
     }
     const art = real(item) ? img : tinted(img, COLORS[item.color].hex);
+    const coated = layer && JACKET_IDS.includes(layer.id);
+    // Under a coat, the top waits until the coat is drawn.
+    if (item === top && coated) { drawn.top = { art, box }; return; }
     g.drawImage(art, box.x, box.y, box.width, box.height);
-    if (item === top) drawn.top = { art, box };
-    // An open jacket shows the top through its front opening.
     if (jacket && drawn.top) {
-      const strip = m.chestW * .34;
+      // The top shows only through the coat's front opening, never past the coat's outline.
+      const under = document.createElement("canvas");
+      under.width = CANVAS_W; under.height = CANVAS_H;
+      const u = under.getContext("2d");
+      const t = drawn.top.box;
+      u.drawImage(drawn.top.art, t.x, t.y, t.width, t.height);
+      u.globalCompositeOperation = "destination-in";
+      u.drawImage(art, box.x, box.y, box.width, box.height);
+      const opening = m.chestW * .3;
       g.save();
       g.beginPath();
-      g.rect(MID - strip / 2, drawn.top.box.y, strip, drawn.top.box.height);
+      g.rect(MID - opening / 2, t.y, opening, Math.min(t.height, box.y + box.height - t.y));
       g.clip();
-      g.drawImage(drawn.top.art, drawn.top.box.x, drawn.top.box.y, drawn.top.box.width, drawn.top.box.height);
+      g.drawImage(under, 0, 0);
       g.restore();
     }
   });
