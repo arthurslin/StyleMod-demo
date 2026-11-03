@@ -693,28 +693,28 @@ const look = (shape, tops, pants, shoes, layers, inspo = "", skirt = null) => ({
 const STYLE_LOOKS = {
   classic: [
     look("solo", ["quarter-zip"], ["str-pant", "khakis"], ["loafer"], [], "The Manual's knit-and-tailored-trousers formula", ["midi-skirt"]),
-    look("short", ["quarter-zip-cable"], ["str-jean", "wide-pant"], ["chelsea"], ["barn"], "fall 2026's barn jacket over a chunky knit"),
-    look("long", ["quarter-zip"], ["cig-pant", "str-pant"], ["loafer"], ["overcoat", "trench"], "a long coat over slim tailoring")
+    look("short", ["oxford"], ["str-jean", "wide-pant"], ["chelsea"], ["barn"], "fall 2026's barn jacket over an oxford shirt"),
+    look("long", ["fine-knit"], ["cig-pant", "str-pant"], ["loafer"], ["overcoat", "trench"], "a long coat over a fine crew-neck and slim tailoring")
   ],
   athleisure: [
     look("solo", ["quarter-zip-fleece"], ["wide-sweat", "track-pant"], ["runner"], [], "track pants worn as a real outfit"),
-    look("short", ["quarter-zip"], ["track-pant", "wide-sweat"], ["chunky-snk"], ["crop-puffer", "shell"], "Musinsa's short outerwear"),
-    look("long", ["quarter-zip"], ["tapered-jog", "track-pant"], ["runner"], ["overcoat"], "a wool coat over track pants and runners")
+    look("short", ["boxy-sweat"], ["track-pant", "wide-sweat"], ["chunky-snk"], ["crop-puffer", "shell"], "Musinsa's short outerwear over a sweatshirt"),
+    look("long", ["fine-knit"], ["tapered-jog", "track-pant"], ["runner"], ["overcoat"], "a wool coat over a crew-neck, track pants and runners")
   ],
   minimalist: [
     look("solo", ["quarter-zip"], ["wide-pant", "pleat-wide"], ["low-snk", "loafer"], [], "one clean knit over one clean wide leg", ["midi-skirt"]),
-    look("short", ["quarter-zip"], ["wide-pant", "extra-wide-jean"], ["loafer"], ["moto", "suede"], "a cropped jacket over a wide leg"),
-    look("long", ["quarter-zip-cable"], ["cig-pant", "slim-jean"], ["chelsea"], ["overcoat"], "a long coat over a narrow trouser")
+    look("short", ["fine-knit"], ["wide-pant", "extra-wide-jean"], ["loafer"], ["moto", "suede"], "a cropped jacket and a fine crew-neck over a wide leg"),
+    look("long", ["oxford"], ["cig-pant", "slim-jean"], ["chelsea"], ["overcoat"], "a long coat over a crisp shirt and a narrow trouser")
   ],
   streetwear: [
     look("solo", ["quarter-zip-waffle"], ["extra-wide-jean", "cargo"], ["chunky-snk"], [], "Musinsa's extra-wide denim"),
-    look("short", ["quarter-zip-waffle"], ["cargo", "parachute"], ["chunky-snk"], ["crop-puffer", "moto"], "a short puffer over baggy cargos"),
-    look("long", ["quarter-zip"], ["stacked-jean", "str-jean"], ["low-snk"], ["overcoat"], "Fashion Nova's stacked denim under a long coat")
+    look("short", ["boxy-sweat"], ["cargo", "parachute"], ["chunky-snk"], ["crop-puffer", "moto"], "a short puffer and a boxy sweatshirt over baggy cargos"),
+    look("long", ["big-shirt"], ["stacked-jean", "str-jean"], ["low-snk"], ["overcoat"], "an oversized shirt and stacked denim under a long coat")
   ],
   bohemian: [
     look("solo", ["quarter-zip-cable"], ["wide-pant", "pleat-wide"], ["chelsea"], [], "a chunky knit over fluid wide trousers", ["maxi-skirt"]),
-    look("short", ["quarter-zip-waffle"], ["wide-pant", "pleat-wide"], ["loafer"], ["suede"], "chocolate suede, fall 2026's key jacket"),
-    look("long", ["quarter-zip-cable"], ["str-pant", "str-jean"], ["chelsea"], ["trench", "overcoat"], "a slouchy trench with the belt left loose", ["midi-skirt"])
+    look("short", ["crinkle-shirt"], ["wide-pant", "pleat-wide"], ["loafer"], ["suede"], "chocolate suede, fall 2026's key jacket, over a crinkle shirt"),
+    look("long", ["chunky-knit"], ["str-pant", "str-jean"], ["chelsea"], ["trench", "overcoat"], "a slouchy trench over a chunky crew-neck, belt left loose", ["midi-skirt"])
   ]
 };
 
@@ -793,7 +793,7 @@ function fitsFormula(item, ctx) {
   const topPick = ctx.chosen && ctx.chosen.find(i => i.slot === "top");
   const bottomPick = ctx.chosen && ctx.chosen.find(i => i.slot === "bottom");
   const shoes = ctx.chosen && ctx.chosen.find(i => i.slot === "shoes");
-  if (item.slot === "top") return item.color === ctx.bread && (all ? item.id.startsWith("quarter-zip") && !item.id.includes("short") : recipe.tops.includes(item.id));
+  if (item.slot === "top") return item.color === ctx.bread && (all ? looks.some(l => l.tops.includes(item.id)) : recipe.tops.includes(item.id));
   if (item.slot === "bottom") {
     const ids = ctx.anyCut ? ANY_CUT : all ? looks.flatMap(l => bottomIds(l, ctx)) : bottomIds(recipe, ctx);
     if (!ids.includes(item.id) || storyRank(story.pants, item) < 0) return false;
@@ -1316,6 +1316,9 @@ function loadShoe(name) {
 
 /* A knit hem falls over the waistband with a little shadow under it, not a hard cut. */
 const HEM_SHADOW = "drop-shadow(0 3px 3px rgba(25, 15, 40, .35))";
+/* Long-sleeve tops: the form's arms are always covered and its hands come out of the cuffs. */
+const LONG_TOPS = ["quarter-zip", "quarter-zip-waffle", "quarter-zip-cable", "quarter-zip-fleece", "oxford", "fine-knit", "chunky-knit", "boxy-sweat", "big-shirt", "crinkle-shirt"];
+const SHIRTS = ["oxford", "big-shirt", "crinkle-shirt"];
 const WAIST_JACKETS = ["suede", "moto", "crop-puffer"];
 /* The front opening of each jacket photo, traced on the image: [y, x] points, as shares
    of its height and width, down the left front edge and down the right one. Inside it
@@ -1764,7 +1767,7 @@ async function paintDummy(canvas, outfit) {
   };
   // Sleeves cover the arms: under a coat or a long-sleeve top, hide the dummy's arms
   // from shoulder to wrist so the dummy's angled arms never show past the sleeves.
-  const longSleeves = top && top.id.startsWith("quarter-zip") && !top.id.includes("short");
+  const longSleeves = top && LONG_TOPS.includes(top.id);
   if ((layer && JACKET_IDS.includes(layer.id)) || longSleeves) {
     // Hands go too here; they're put back at the cuffs once the sleeves are placed.
     const side = m.chestW * .56, armTop = m.neckY + CANVAS_H * .03, armBottom = m.crotchY + CANVAS_H * .1;
@@ -2001,9 +2004,11 @@ function stylingDetails(outfit) {
   const { top, bottom, shoes, layer, accessory } = outfit.items;
   const c = item => COLORS[item.color].label.toLowerCase();
   const notes = [];
-  notes.push(top.id.includes("short")
-    ? `Zip the ${c(top)} collar about halfway so it sits open at the neck.`
-    : `Zip the ${c(top)} collar about halfway and push the sleeves up slightly at the wrist.`);
+  notes.push(top.id.startsWith("quarter-zip")
+    ? `Zip the ${c(top)} collar about halfway and push the sleeves up slightly at the wrist.`
+    : SHIRTS.includes(top.id)
+      ? `Leave the top button of the ${c(top)} ${top.name} open and give the cuffs one roll.`
+      : `Let the ${c(top)} ${top.name} sit at the hip and push the sleeves up slightly at the wrist.`);
   const cut = bottom.id;
   if (["wide-pant", "pleat-wide", "extra-wide-jean", "wide-jean", "wide-sweat", "parachute", "cargo"].includes(cut)) notes.push(`Let the ${bottom.name} fall straight and skim the top of the shoe, with no cuff.`);
   else if (cut === "stacked-jean") notes.push("Let the extra length stack in soft folds just above the shoe.");
