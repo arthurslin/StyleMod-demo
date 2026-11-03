@@ -1307,6 +1307,29 @@ function shoeGap(img) {
   return gapMarks.get(img);
 }
 
+/* Each shoe's own columns: drop thin edges (floor shadow, a sliver of the other shoe)
+   by keeping only columns that hold a solid share of the shoe's height. */
+const halfMarks = new Map();
+function shoeHalves(img) {
+  if (!halfMarks.has(img)) {
+    const solid = alphaOf(img), gap = shoeGap(img);
+    const counts = Array.from({ length: img.width }, (_, x) => {
+      let n = 0;
+      for (let y = 0; y < img.height; y += 2) if (solid(x, y)) n++;
+      return n;
+    });
+    const tighten = (a, b) => {
+      const peak = Math.max(...counts.slice(a, b));
+      let l = a, r = b - 1;
+      while (l < r && counts[l] < peak * .3) l++;
+      while (r > l && counts[r] < peak * .3) r--;
+      return [l, r + 1];
+    };
+    halfMarks.set(img, [tighten(0, gap), tighten(gap, img.width)]);
+  }
+  return halfMarks.get(img);
+}
+
 /* Full width of a garment image at a given share of its height (shoulders plus sleeve tops). */
 const spanMarks = new Map();
 function garmentSpan(img, share) {
@@ -1373,7 +1396,8 @@ async function paintDummy(canvas, outfit) {
   if (shoes) {
     g.save();
     g.globalCompositeOperation = "destination-out";
-    g.fillRect(0, m.ankleY - CANVAS_H * .01, CANVAS_W, CANVAS_H);
+    // From the knee down: full-length pants and shoes cover this, so no bare leg shows around the shoe.
+    g.fillRect(0, m.crotchY + (m.ankleY - m.crotchY) * .5, CANVAS_W, CANVAS_H);
     g.restore();
   }
   const drawn = {};
@@ -1431,12 +1455,26 @@ async function paintDummy(canvas, outfit) {
       let shoeTop = CANVAS_H;
       // Feet don't change with the pants: one scale for both shoes, set by the body.
       const scale = (m.hipW * .88) / img.width;
-      [[0, gap], [gap, img.width]].forEach(([from, to], side) => {
+      // A real pair is a mirror image: take the cleaner (narrower) shoe and mirror it for the
+      // other foot, so both match and no floor shadow or sliver comes along.
+      const halves = shoeHalves(img);
+      const base = (halves[0][1] - halves[0][0]) <= (halves[1][1] - halves[1][0]) ? 0 : 1;
+      [0, 1].forEach(side => {
+        const [from, to] = halves[base];
         const halfW = to - from;
         const width = halfW * scale;
         const height = img.height * scale;
+        const flip = side !== base;
         const y = m.footY - height + 6;
-        g.drawImage(art, from, 0, halfW, img.height, legs[side].c - width / 2, y, width, height);
+        if (flip) {
+          g.save();
+          g.translate(legs[side].c, 0);
+          g.scale(-1, 1);
+          g.drawImage(art, from, 0, halfW, img.height, -width / 2, y, width, height);
+          g.restore();
+        } else {
+          g.drawImage(art, from, 0, halfW, img.height, legs[side].c - width / 2, y, width, height);
+        }
         shoeTop = Math.min(shoeTop, y + height * .3);
       });
       // The hem lands just inside the shoe's opening, a light break over the top.
