@@ -1130,7 +1130,7 @@ const CANVAS_W = 520, CANVAS_H = 900, MID = CANVAS_W / 2;
    and for bottoms a set height, so legs always reach the same place on the form. */
 const WEAR = {
   "shell": ["shell-jacket", 0, 1.9], "fleece-jacket": ["fleece-jacket", 0, 1.9], "moto": ["moto-jacket", 0, 1.8],
-  "extra-wide-jean": ["extra-wide-jeans", 0, 1.35, "full"], "stacked-jean": ["stacked-jeans", 0, 1.05, "full"], "hobo": ["hobo-bag", .5, .62, null, 1.0],
+  "extra-wide-jean": ["extra-wide-jeans", 0, 1.35, "full"], "stacked-jean": ["stacked-jeans", 0, 1.05, "full"], "hobo": ["hobo-bag", .43, .56, null, .62],
   "quarter-zip": ["quarter-zip", 0, 1.66], "quarter-zip-short": ["quarter-zip-short", 0, 1.5], "quarter-zip-short-waffle": ["quarter-zip-short-waffle", 0, 1.5], "quarter-zip-waffle": ["quarter-zip-waffle", 0, 1.66], "quarter-zip-cable": ["quarter-zip-cable", 0, 1.7],
   "quarter-zip-fleece": ["quarter-zip-fleece", 0, 1.66], "khakis": ["straight-trousers", 0, 1.15, "full"], "slim-khakis": ["slim-jeans", 0, 1.05, "full"],
   "crop-tee": ["crop-tee", .137, 1.42], "rib-tee": ["tee", .137, 1.42], "rib-tank": ["tank", .145, .92], "train-tank": ["tank", .145, .92],
@@ -1148,7 +1148,7 @@ const WEAR = {
   "chelsea": ["chelsea-boots", .89, .8], "strap-heel": ["block-heels", .91, .76],
   "blazer": ["blazer", .125, 1.82], "power-blazer": ["power-blazer", .12, 1.98], "chore": ["chore-jacket", .125, 1.9], "track-top": ["track-jacket", .125, 1.85],
   "trench": ["trench", .12, 1.95], "crop-puffer": ["puffer", .12, 1.98],
-  "crossbody": ["crossbody-bag", .4, .44, null, -.5], "tote": ["tote", .5, .66, null, 1.0], "scarf": ["scarf", .125, .44], "cap": ["cap", -.012, .46], "beanie": ["beanie", -.008, .4]
+  "crossbody": ["crossbody-bag", .4, .44, null, -.5], "tote": ["tote", .45, .6, null, .64], "scarf": ["scarf", .125, .44], "cap": ["cap", -.012, .46], "beanie": ["beanie", -.008, .4]
 };
 
 /* Shoes photographed in their real color. These are drawn as-is, never tinted. */
@@ -1327,7 +1327,8 @@ async function paintDummy(canvas, outfit) {
   // from shoulder to wrist so the dummy's angled arms never show past the sleeves.
   const longSleeves = top && top.id.startsWith("quarter-zip") && !top.id.includes("short");
   if ((layer && JACKET_IDS.includes(layer.id)) || longSleeves) {
-    const side = m.chestW * .56, armTop = m.neckY + CANVAS_H * .03, armBottom = m.crotchY - CANVAS_H * .015;
+    // Hands go too, like a handless display form, so nothing floats below the cuffs.
+    const side = m.chestW * .56, armTop = m.neckY + CANVAS_H * .03, armBottom = m.crotchY + CANVAS_H * .1;
     g.save();
     g.globalCompositeOperation = "destination-out";
     g.fillRect(0, armTop, MID - side, armBottom - armTop);
@@ -1428,7 +1429,8 @@ async function paintDummy(canvas, outfit) {
 }
 
 /* A tee hem under the knit, except for sporty looks where the zip is worn on its own. */
-const showsTee = outfit => outfit.style !== "athleisure" && outfit.items.top && outfit.items.top.id.startsWith("quarter-zip");
+const showsTee = outfit => outfit.style !== "athleisure" && outfit.items.top && outfit.items.top.id.startsWith("quarter-zip")
+  && !(outfit.items.layer && JACKET_IDS.includes(outfit.items.layer.id));
 
 /* Practical styling notes for each look, built from the pieces in it. */
 function stylingDetails(outfit) {
