@@ -1,6 +1,6 @@
 # StyleMod Outfit Builder
 
-A concept mockup for a marketing case study on responsible Gen AI personalization. The live site is the three-question presentation version: pick a color, a section and an occasion, and get three quarter-zip outfits styled with the sandwich method. The full five-step quiz lives on the [`full-quiz`](../../tree/full-quiz) branch.
+A concept mockup for a marketing case study on responsible Gen AI personalization. The live site is the five-question presentation version: gender, age range, color palette, style and accessory, which returns three quarter-zip outfits on a dressed dummy. The original full quiz lives on the [`full-quiz`](../../tree/full-quiz) branch.
 
 **Live demo:** https://arthurslin.github.io/StyleMod-demo/
 
