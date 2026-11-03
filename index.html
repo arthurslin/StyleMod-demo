@@ -716,7 +716,8 @@ function luminance(color) {
   return .2126 * lin((v >> 16) & 255) + .7152 * lin((v >> 8) & 255) + .0722 * lin(v & 255);
 }
 function coatColorFor(top, bottom, shoes, style) {
-  const contrasts = c => c !== top.color && c !== (bottom && bottom.color) && Math.abs(luminance(c) - luminance(top.color)) >= .12;
+  const t = luminance(top.color);
+  const contrasts = c => c !== top.color && c !== (bottom && bottom.color) && (isLight(top.color) ? luminance(c) <= t - .12 : luminance(c) >= t + .12);
   const options = [shoes && shoes.color, ...(COAT_SHADES[style] || COAT_SHADES.classic)].filter(Boolean);
   return options.find(contrasts) || options.find(c => c !== top.color) || "black";
 }
@@ -724,6 +725,7 @@ function coatColorFor(top, bottom, shoes, style) {
 /* Shoes echo the top's depth: dark tops get dark shoes, light tops get light ones.
    Leather shoes stay brown or black; sneakers go white or black. */
 function shoeColorFor(recipe, topColor) {
+  if (recipe.match) return isLight(topColor) ? "black" : "white";
   const leather = recipe.shoes.some(id => ["loafer", "chelsea"].includes(id));
   if (isLight(topColor)) return recipe.shoeColor === "black" ? (leather ? "brown" : "white") : recipe.shoeColor;
   return recipe.shoeColor === "white" ? "black" : recipe.shoeColor;
@@ -1320,7 +1322,11 @@ async function paintDummy(canvas, outfit) {
   const [dummy, teeImg, ...garments] = await Promise.all([loadImage(form.src), loadImage("tee"), ...order.map(i => realAcc(i) ? loadShoe("../accessories/" + realAcc(i)) : real(i) ? loadShoe(real(i)) : loadImage(WEAR[i.id][0]))]);
   const g = canvas.getContext("2d");
   g.clearRect(0, 0, CANVAS_W, CANVAS_H);
+  // A slightly deeper tone and a soft shadow make the form read as solid on the light panel.
+  g.save();
+  g.filter = "brightness(.88) drop-shadow(0 3px 8px rgba(20, 10, 60, .28))";
   g.drawImage(dummy, MID - dummy.width / 2, 0);
+  g.restore();
   const m = formMarks[form.src] || (formMarks[form.src] = measureForm(dummy));
   const drawn = {};
   // Sleeves cover the arms: under a coat or a long-sleeve top, hide the dummy's arms
