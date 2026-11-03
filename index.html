@@ -1302,24 +1302,26 @@ function loadShoe(name) {
   return imageCache[key];
 }
 
+/* A knit hem falls over the waistband with a little shadow under it, not a hard cut. */
+const HEM_SHADOW = "drop-shadow(0 3px 3px rgba(25, 15, 40, .35))";
 const WAIST_JACKETS = ["suede", "moto", "crop-puffer"];
 /* The front opening of each jacket photo, traced on the image: [y, x] points, as shares
    of its height and width, down the left front edge and down the right one. Inside it
    is the jacket's back panel, which is drawn behind the body, so the pants and knit
    show between the fronts the way they do when it's worn open. */
 const OPENINGS = {
-  "overcoat":     [[[.03, .361], [.12, .311], [.501, .311], [.971, .291]], [[.03, .639], [.12, .689], [.501, .689], [.971, .709]]],
-  "trench":       [[[.02, .41], [.12, .4], [.5, .42], [.94, .41]], [[.02, .59], [.12, .6], [.5, .58], [.94, .59]]],
-  "barn-jacket":  [[[.06, .389], [.501, .389], [.953, .419]], [[.06, .611], [.501, .611], [.953, .581]]],
-  "suede-jacket": [[[.04, .401], [.21, .491]], [[.04, .599], [.21, .509]]],
-  "moto-jacket":  [[[.08, .391], [.2, .431], [.45, .481], [.73, .491]], [[.08, .609], [.2, .569], [.45, .519], [.73, .509]]],
-  "blazer":       [[[.02, .421], [.1, .401], [.5, .431], [.95, .411]], [[.02, .579], [.1, .599], [.5, .569], [.95, .589]]],
-  "power-blazer": [[[.02, .43], [.5, .46], [.95, .47]], [[.02, .57], [.5, .54], [.95, .53]]],
-  "chore-jacket": [[[.03, .393], [.15, .373], [.5, .433], [.92, .464]], [[.03, .607], [.15, .627], [.5, .567], [.92, .536]]],
-  "shell-jacket": [[[.08, .382], [.5, .412], [.95, .432]], [[.08, .618], [.5, .588], [.95, .568]]],
-  "puffer":       [[[.08, .381], [.77, .411]], [[.08, .619], [.77, .589]]],
-  "fleece-jacket": [[[.08, .39], [.9, .43]], [[.08, .61], [.9, .57]]],
-  "track-jacket": [[[.08, .3], [.88, .3]], [[.08, .7], [.88, .7]]]
+  "overcoat":     [[[.04, .427], [.08, .405], [.12, .413], [.16, .423], [.2, .434], [.24, .444], [.28, .454], [.32, .459], [.36, .465], [.4, .469], [.44, .471], [.48, .471], [.52, .473], [.56, .473], [.6, .473], [.64, .473], [.68, .473], [.72, .473], [.76, .473], [.8, .473], [.84, .473], [.88, .473], [.92, .473], [.96, .475]]],
+  "trench":       [[[.08, .397], [.12, .404], [.16, .414], [.2, .423], [.24, .429], [.28, .432], [.32, .434], [.36, .438], [.4, .44], [.44, .444], [.48, .446], [.52, .448], [.56, .449], [.6, .451], [.64, .451], [.68, .453], [.72, .453], [.76, .453], [.8, .451], [.84, .449], [.88, .448], [.92, .446], [.96, .444]]],
+  "barn-jacket":  [[[.08, .395], [.12, .41], [.16, .443], [.2, .453], [.24, .46], [.28, .46], [.32, .46], [.36, .458], [.4, .456], [.44, .453], [.48, .453], [.52, .451], [.56, .449], [.6, .449], [.64, .448], [.68, .448], [.72, .446], [.76, .446], [.8, .443], [.84, .443], [.88, .441], [.92, .438], [.96, .439]]],
+  "suede-jacket": [[[.08, .385], [.12, .395], [.16, .445], [.2, .462], [.24, .467], [.28, .467], [.32, .465], [.36, .462], [.4, .462], [.44, .46], [.48, .46], [.52, .46], [.56, .46], [.6, .458], [.64, .458], [.68, .457], [.72, .455], [.76, .453], [.8, .453], [.84, .455]]],
+  "moto-jacket":  [[[.16, .387], [.2, .397], [.24, .408], [.28, .417], [.32, .429], [.36, .437], [.4, .44], [.44, .446], [.48, .446], [.52, .444], [.56, .442], [.6, .438], [.64, .435], [.68, .437], [.72, .422]]],
+  "blazer":       [[[.08, .392], [.12, .396], [.16, .401], [.2, .408], [.24, .413], [.28, .422], [.32, .428], [.36, .435], [.4, .44], [.44, .447], [.48, .454], [.52, .46], [.56, .463], [.6, .465], [.64, .465], [.68, .463], [.72, .462], [.76, .46], [.8, .456], [.84, .453], [.88, .449], [.92, .447], [.96, .444]]],
+  "power-blazer": [[[.08, .402], [.12, .406], [.16, .411], [.2, .415], [.24, .42], [.28, .425], [.32, .432], [.36, .438], [.4, .445], [.44, .45], [.48, .455], [.52, .459], [.56, .462], [.6, .466], [.64, .467], [.68, .467], [.72, .467], [.76, .467], [.8, .464], [.84, .46], [.88, .455], [.92, .445], [.96, .424]]],
+  "chore-jacket": [[[.08, .388], [.12, .402], [.16, .437], [.2, .462], [.24, .476], [.28, .479], [.32, .479], [.36, .476], [.4, .476], [.44, .474], [.48, .472], [.52, .472], [.56, .472], [.6, .472], [.64, .472], [.68, .471], [.72, .471], [.76, .471], [.8, .471], [.84, .471], [.88, .469], [.92, .469], [.96, .469]]],
+  "shell-jacket": [[[.12, .386], [.16, .39], [.2, .411], [.24, .434], [.28, .439], [.32, .441], [.36, .439], [.4, .437], [.44, .434], [.48, .43], [.52, .43], [.56, .434], [.6, .437], [.64, .437], [.68, .437], [.72, .437], [.76, .437], [.8, .437], [.84, .439], [.88, .439], [.92, .439]]],
+  "puffer":       [[[.12, .372], [.16, .381], [.2, .416], [.24, .423], [.28, .417], [.32, .419], [.36, .421], [.4, .419], [.44, .416], [.48, .416], [.52, .414], [.56, .411], [.6, .405], [.64, .402], [.68, .414], [.72, .414]]],
+  "fleece-jacket": [[[.12, .43], [.16, .448], [.2, .455], [.24, .453], [.28, .45], [.32, .448], [.36, .447], [.4, .447], [.44, .442], [.48, .44], [.52, .442], [.56, .448], [.6, .45], [.64, .453], [.68, .453], [.72, .455], [.76, .458], [.8, .458], [.84, .46], [.88, .463], [.92, .463]]],
+  "track-jacket": [[[.12, .443], [.16, .445], [.2, .446], [.24, .445], [.28, .446], [.32, .445], [.36, .445], [.4, .443], [.44, .439], [.48, .434], [.52, .434], [.56, .434], [.6, .434], [.64, .434], [.68, .434], [.72, .434], [.76, .436], [.8, .438], [.84, .438], [.88, .438], [.92, .436]]]
 };
 /* The inside of each knit's collar, traced the same way as [x, y] points: the back of the
    collar and the zip's V. The form's neck is drawn over it, so the neck rises out of the
@@ -1332,6 +1334,12 @@ const NECKS = {
   "quarter-zip-cable":        [[.399, 0], [.599, 0], [.599, .045], [.499, .06], [.399, .045]],
   "quarter-zip-fleece":       [[.402, 0], [.603, 0], [.603, .04], [.502, .07], [.402, .04]]
 };
+/* Where a jacket's body ends, as a share of its photo's height: the bottom of its opening.
+   On a short jacket the sleeves hang below that, so the photo's own bottom is the cuffs. */
+function hemShare(name) {
+  const bottom = Math.max(...(OPENINGS[name] || [[[1, 0]]])[0].map(([y]) => y));
+  return bottom > .9 ? 1 : bottom + .02;
+}
 function polyPath(g, points, box) {
   g.beginPath();
   points.forEach(([x, y], i) => g[i ? "lineTo" : "moveTo"](box.x + x * box.width, box.y + y * box.height));
@@ -1339,7 +1347,9 @@ function polyPath(g, points, box) {
 }
 function openingPath(g, name, box) {
   // The opening runs up to the top edge, so the back of the collar sits behind the neck too.
-  const [left, right] = OPENINGS[name].map(side => [[-.02, side[0][1]], ...side]);
+  // Symmetrical jackets list only the left edge; the right one mirrors it.
+  const sides = OPENINGS[name].length === 2 ? OPENINGS[name] : [OPENINGS[name][0], OPENINGS[name][0].map(([y, x]) => [y, 1 - x])];
+  const [left, right] = sides.map(side => [[-.02, side[0][1]], ...side]);
   polyPath(g, [...left, ...[...right].reverse()].map(([y, x]) => [x, y]), box);
 }
 const JACKET_IDS = ["shell", "fleece-jacket", "moto", "blazer", "power-blazer", "chore", "track-top", "trench", "crop-puffer", "barn", "suede", "overcoat"];
@@ -1563,6 +1573,17 @@ function formHands(dummy, m) {
   }
   return handMarks[dummy.src];
 }
+/* Where a top's body ends at its center, as a share of its height (the sleeves can hang lower). */
+const hemMarks = new Map();
+function centerHem(img) {
+  if (!hemMarks.has(img.src)) {
+    const solid = alphaOf(img);
+    let y = img.height - 1;
+    while (y > 0 && !solid(img.width / 2, y)) y--;
+    hemMarks.set(img.src, y / img.height);
+  }
+  return hemMarks.get(img.src);
+}
 const garmentSpan = (img, share) => { const [l, r] = garmentEdges(img, share); return r - l; };
 const garmentMid = (img, share) => { const [l, r] = garmentEdges(img, share); return (l + r) / 2; };
 
@@ -1692,11 +1713,13 @@ async function paintDummy(canvas, outfit) {
       // little longer rather than being squashed narrow.
       const ease = jacket ? 1.14 : item.id === "quarter-zip-cable" ? 1.08 : 1.04;
       const shoulderY = Math.round(m.neckY + (m.waistY - m.neckY) * .3);
-      let sy = (hem - y) / img.height, sx, share;
+      // A jacket's hem is its body's hem, which on a short jacket sits above the cuffs.
+      const body = jacket ? hemShare(WEAR[item.id][0]) : 1;
+      let sy = (hem - y) / (img.height * body), sx, share;
       for (let pass = 0; pass < 2; pass++) {
         share = Math.round((shoulderY - y) / (img.height * sy) * 100) / 100;
         sx = m.spanAt(shoulderY) * ease / garmentSpan(img, share);
-        sy = Math.min(sx / .85, Math.max(sx / 1.2, (hem - y) / img.height));
+        sy = Math.min(sx / .85, Math.max(sx / 1.2, (hem - y) / (img.height * body)));
       }
       // Centered on its own shoulders, not its bounding box, so a sleeve that flares
       // further on one side doesn't push the body off center.
@@ -1706,6 +1729,7 @@ async function paintDummy(canvas, outfit) {
   const coatImg = coat && garments[order.indexOf(coat)];
   const coatArt = coat && tinted(coatImg, COLORS[coat.color].hex);
   const coatBox = coat && upperBox(coat, coatImg);
+  const coatHemY = coat && coatBox.y + coatBox.height * hemShare(WEAR[coat.id][0]);
   order.forEach((item, i) => {
     const [, topEdge, widthShare, , offset] = WEAR[item.id] || [];
     const img = garments[i];
@@ -1721,7 +1745,23 @@ async function paintDummy(canvas, outfit) {
       g.drawImage(coatArt, coatBox.x, coatBox.y, coatBox.width, coatBox.height);
       g.restore();
     }
-    if (item.slot === "bottom") box = placeBottom(img, item, m, drawn.shoeTop);
+    if (item.slot === "bottom") {
+      box = placeBottom(img, item, m, drawn.shoeTop);
+      const topImg = top && garments[order.indexOf(top)];
+      if (topImg) {
+        // The waistband sits under the knit's hem (or the jacket's, when the knit is tucked
+        // in), so nothing of it shows above the hem or between the knit and its sleeves.
+        const knit = upperBox(top, topImg);
+        const cover = coat && WAIST_JACKETS.includes(coat.id) ? coatHemY : knit.y + knit.height * centerHem(topImg);
+        g.save();
+        g.beginPath();
+        g.rect(0, cover - CANVAS_H * .02, CANVAS_W, CANVAS_H);
+        g.clip();
+        g.drawImage(tinted(img, COLORS[item.color].hex), box.x, box.y, box.width, box.height);
+        g.restore();
+        return;
+      }
+    }
     else if (item.slot === "top" || jacket) box = upperBox(item, img);
     else if (item.id === "chain") {
       const width = m.chestW * .5;
@@ -1802,17 +1842,28 @@ async function paintDummy(canvas, outfit) {
       under.width = CANVAS_W; under.height = CANVAS_H;
       const u = under.getContext("2d");
       u.drawImage(art, box.x, box.y, box.width, box.height);
+      // The jacket's outline, opening included: the knit fills the opening, nothing past it.
+      const shape = document.createElement("canvas");
+      shape.width = CANVAS_W; shape.height = CANVAS_H;
+      const sh = shape.getContext("2d");
+      sh.drawImage(coatArt, coatBox.x, coatBox.y, coatBox.width, coatBox.height);
+      openingPath(sh, WEAR[coat.id][0], coatBox);
+      sh.fill();
       u.globalCompositeOperation = "destination-in";
-      u.drawImage(coatArt, coatBox.x, coatBox.y, coatBox.width, coatBox.height);
+      u.drawImage(shape, 0, 0);
+      g.save();
+      g.filter = HEM_SHADOW;
       g.drawImage(under, 0, 0);
+      g.restore();
       // Below a hip-length coat, the rest of the top shows as normal. Under a waist-length
       // jacket the knit is tucked in, so the jacket meets the waistband and the leg runs long.
-      const coatHem = coatBox.y + coatBox.height;
+      const coatHem = coatHemY;
       if (coatHem < box.y + box.height && !WAIST_JACKETS.includes(coat.id)) {
         g.save();
         g.beginPath();
         g.rect(0, coatHem - 2, CANVAS_W, box.y + box.height - coatHem + 2);
         g.clip();
+        g.filter = HEM_SHADOW;
         g.drawImage(art, box.x, box.y, box.width, box.height);
         g.restore();
       }
@@ -1845,7 +1896,10 @@ async function paintDummy(canvas, outfit) {
       return;
     }
     if (item === top && longSleeves) handsAt(img, box);
+    g.save();
+    if (item === top) g.filter = HEM_SHADOW;
     g.drawImage(art, box.x, box.y, box.width, box.height);
+    g.restore();
     if (item === top) neckOver(item, box);
   });
   g.setTransform(1, 0, 0, 1, 0, 0);
