@@ -1308,29 +1308,29 @@ const WAIST_JACKETS = ["suede", "moto", "crop-puffer"];
    is the jacket's back panel, which is drawn behind the body, so the pants and knit
    show between the fronts the way they do when it's worn open. */
 const OPENINGS = {
-  "overcoat":     [[[.03, .36], [.12, .31], [.5, .31], [.97, .29]], [[.03, .57], [.14, .62], [.3, .68], [.97, .7]]],
-  "trench":       [[[.02, .41], [.12, .4], [.5, .42], [.94, .41]], [[.02, .57], [.2, .58], [.5, .59], [.94, .58]]],
-  "barn-jacket":  [[[.06, .39], [.5, .39], [.95, .42]], [[.06, .62], [.5, .66], [.95, .65]]],
-  "suede-jacket": [[[.04, .4], [.21, .49]], [[.04, .6], [.21, .51]]],
-  "moto-jacket":  [[[.08, .39], [.2, .43], [.45, .48], [.73, .49]], [[.08, .58], [.2, .58], [.45, .61], [.73, .62]]],
-  "blazer":       [[[.02, .42], [.1, .4], [.5, .43], [.95, .41]], [[.02, .58], [.1, .6], [.5, .56], [.95, .59]]],
-  "power-blazer": [[[.02, .43], [.5, .46], [.95, .47]], [[.02, .59], [.5, .55], [.95, .54]]],
-  "chore-jacket": [[[.03, .39], [.15, .37], [.5, .43], [.92, .46]], [[.03, .59], [.5, .59], [.92, .57]]],
-  "shell-jacket": [[[.08, .38], [.5, .41], [.95, .43]], [[.08, .61], [.5, .59], [.95, .57]]],
-  "puffer":       [[[.08, .38], [.77, .41]], [[.08, .59], [.77, .56]]],
+  "overcoat":     [[[.03, .361], [.12, .311], [.501, .311], [.971, .291]], [[.03, .639], [.12, .689], [.501, .689], [.971, .709]]],
+  "trench":       [[[.02, .41], [.12, .4], [.5, .42], [.94, .41]], [[.02, .59], [.12, .6], [.5, .58], [.94, .59]]],
+  "barn-jacket":  [[[.06, .389], [.501, .389], [.953, .419]], [[.06, .611], [.501, .611], [.953, .581]]],
+  "suede-jacket": [[[.04, .401], [.21, .491]], [[.04, .599], [.21, .509]]],
+  "moto-jacket":  [[[.08, .391], [.2, .431], [.45, .481], [.73, .491]], [[.08, .609], [.2, .569], [.45, .519], [.73, .509]]],
+  "blazer":       [[[.02, .421], [.1, .401], [.5, .431], [.95, .411]], [[.02, .579], [.1, .599], [.5, .569], [.95, .589]]],
+  "power-blazer": [[[.02, .43], [.5, .46], [.95, .47]], [[.02, .57], [.5, .54], [.95, .53]]],
+  "chore-jacket": [[[.03, .393], [.15, .373], [.5, .433], [.92, .464]], [[.03, .607], [.15, .627], [.5, .567], [.92, .536]]],
+  "shell-jacket": [[[.08, .382], [.5, .412], [.95, .432]], [[.08, .618], [.5, .588], [.95, .568]]],
+  "puffer":       [[[.08, .381], [.77, .411]], [[.08, .619], [.77, .589]]],
   "fleece-jacket": [[[.08, .39], [.9, .43]], [[.08, .61], [.9, .57]]],
-  "track-jacket": [[[.08, .26], [.88, .26]], [[.08, .61], [.88, .61]]]
+  "track-jacket": [[[.08, .3], [.88, .3]], [[.08, .7], [.88, .7]]]
 };
 /* The inside of each knit's collar, traced the same way as [x, y] points: the back of the
    collar and the zip's V. The form's neck is drawn over it, so the neck rises out of the
    collar, with the collar's front edge still in front of it. */
 const NECKS = {
   "quarter-zip":              [[.4, 0], [.6, 0], [.6, .05], [.51, .155], [.49, .155], [.4, .05]],
-  "quarter-zip-short":        [[.4, 0], [.6, 0], [.6, .05], [.51, .15], [.49, .15], [.4, .05]],
+  "quarter-zip-short":        [[.402, 0], [.603, 0], [.603, .05], [.512, .15], [.492, .15], [.402, .05]],
   "quarter-zip-short-waffle": [[.38, 0], [.62, 0], [.63, .09], [.505, .24], [.495, .24], [.37, .09]],
   "quarter-zip-waffle":       [[.4, 0], [.6, 0], [.6, .06], [.51, .16], [.49, .16], [.4, .06]],
-  "quarter-zip-cable":        [[.4, 0], [.6, 0], [.6, .045], [.5, .06], [.4, .045]],
-  "quarter-zip-fleece":       [[.4, 0], [.6, 0], [.6, .04], [.5, .07], [.4, .04]]
+  "quarter-zip-cable":        [[.399, 0], [.599, 0], [.599, .045], [.499, .06], [.399, .045]],
+  "quarter-zip-fleece":       [[.402, 0], [.603, 0], [.603, .04], [.502, .07], [.402, .04]]
 };
 function polyPath(g, points, box) {
   g.beginPath();
@@ -1413,9 +1413,6 @@ function measureForm(img) {
     return r - l;
   };
   const armSpan = Math.max(...rows(.3, .42).map(spanAt));
-  // The shoulders: the first row below the neck that reaches nearly the full chest width.
-  const chestSpan = spanAt(Math.round(neckY + (waistY - neckY) * .5));
-  const shoulderW = spanAt(rows(neckY / H, waistY / H).find(y => spanAt(y) >= chestSpan * .9) || waistY);
   // Chest: below the armpits, where the arms have separated from the body.
   const chestY = Math.round(neckY + (waistY - neckY) * .6);
   const chestRun = run(chestY);
@@ -1429,7 +1426,7 @@ function measureForm(img) {
     return MID - W / 2 + (l + r) / 2;
   };
   const ankles = [centerAt(ankleY, Math.round(legX)), centerAt(ankleY, Math.round(cx + hipW / 4))];
-  return { neckY, waistY, waistW: run(waistY), hipW, crotchY, ankleY, footY, armSpan, shoulderW, chestW, feetW, spanAt, ankles };
+  return { neckY, waistY, waistW: run(waistY), hipW, crotchY, ankleY, footY, armSpan, chestW, feetW, spanAt, ankles };
 }
 /* A top's own body width, measured below the sleeves' reach. */
 const torsoMarks = new Map();
@@ -1510,17 +1507,64 @@ function shoeHalves(img) {
 
 /* Full width of a garment image at a given share of its height (shoulders plus sleeve tops). */
 const spanMarks = new Map();
-function garmentSpan(img, share) {
+function garmentEdges(img, share) {
   const key = img.src + share;
   if (!spanMarks.has(key)) {
     const solid = alphaOf(img), y = img.height * share;
     let l = 0, r = img.width - 1;
     while (l < r && !solid(l, y)) l++;
     while (r > l && !solid(r, y)) r--;
-    spanMarks.set(key, r - l);
+    spanMarks.set(key, [l, r]);
   }
   return spanMarks.get(key);
 }
+/* Where each sleeve ends on a garment photo: the outer band of the image, lowest row,
+   and the middle of the cuff there, in image pixels. */
+const cuffMarks = new Map();
+function garmentCuffs(img) {
+  if (!cuffMarks.has(img.src)) {
+    const solid = alphaOf(img), W = img.width, H = img.height;
+    const cuff = side => {
+      const col = x => side ? W - 1 - x : x;
+      let outer = 0;
+      while (outer < W / 2 && ![...Array(H).keys()].some(y => y % 3 === 0 && solid(col(outer), y))) outer++;
+      const band = Math.round(W * .08);
+      let low = 0;
+      for (let y = H - 1; y > 0 && !low; y--) for (let x = outer; x < outer + band; x++) if (solid(col(x), y)) { low = y; break; }
+      // The cuff's width a little above its lowest point, along the sleeve's outer run.
+      const y = Math.round(low - H * .02);
+      let l = 0;
+      while (l < W * .3 && !solid(col(l), y)) l++;
+      let r = l;
+      while (r < l + W * .16 && solid(col(r), y)) r++;
+      return { x: col((l + r) / 2), y: low };
+    };
+    cuffMarks.set(img.src, [cuff(0), cuff(1)]);
+  }
+  return cuffMarks.get(img.src);
+}
+/* The form's own hands, cut from the photo below the wrist, with where the wrist is. */
+const handMarks = {};
+function formHands(dummy, m) {
+  if (!handMarks[dummy.src]) {
+    const solid = alphaOf(dummy), W = dummy.width, cx = W / 2, len = Math.round(CANVAS_H * .075);
+    handMarks[dummy.src] = [0, 1].map(side => {
+      const inArm = x => side ? x > cx + m.chestW * .56 : x < cx - m.chestW * .56;
+      let tip = 0;
+      for (let y = Math.round(m.crotchY + CANVAS_H * .1); y > m.waistY && !tip; y--) for (let x = 0; x < W; x++) if (inArm(x) && solid(x, y)) { tip = y; break; }
+      const xs = [];
+      for (let x = 0; x < W; x++) if (inArm(x) && solid(x, tip - len)) xs.push(x);
+      const left = side ? Math.round(cx + m.chestW * .56) : 0, right = side ? W : Math.round(cx - m.chestW * .56);
+      const sprite = document.createElement("canvas");
+      sprite.width = right - left; sprite.height = len + 2;
+      sprite.getContext("2d").drawImage(dummy, left, tip - len, sprite.width, sprite.height, 0, 0, sprite.width, sprite.height);
+      return { sprite, wrist: (xs.length ? (xs[0] + xs[xs.length - 1]) / 2 : (left + right) / 2) - left };
+    });
+  }
+  return handMarks[dummy.src];
+}
+const garmentSpan = (img, share) => { const [l, r] = garmentEdges(img, share); return r - l; };
+const garmentMid = (img, share) => { const [l, r] = garmentEdges(img, share); return (l + r) / 2; };
 
 const garmentMarks = new Map();
 function waistbandWidth(img) {
@@ -1586,6 +1630,17 @@ async function paintDummy(canvas, outfit) {
     g.restore();
   }
   const drawn = {};
+  // Hands come out of the outer sleeves: drawn just before that garment, so the cuff covers the wrist.
+  const handsAt = (img, box) => {
+    const hands = formHands(dummy, m);
+    garmentCuffs(img).forEach((cuff, side) => {
+      const hand = hands[side];
+      g.save();
+      g.filter = "brightness(.88)";
+      g.drawImage(hand.sprite, box.x + cuff.x * box.width / img.width - hand.wrist, box.y + cuff.y * box.height / img.height - CANVAS_H * .012);
+      g.restore();
+    });
+  };
   // The neck goes back over the inside of the collar, so the form is wearing the knit.
   const neckOver = (item, box) => {
     const points = NECKS[WEAR[item.id][0]];
@@ -1601,7 +1656,7 @@ async function paintDummy(canvas, outfit) {
   // from shoulder to wrist so the dummy's angled arms never show past the sleeves.
   const longSleeves = top && top.id.startsWith("quarter-zip") && !top.id.includes("short");
   if ((layer && JACKET_IDS.includes(layer.id)) || longSleeves) {
-    // Hands go too, like a handless display form, so nothing floats below the cuffs.
+    // Hands go too here; they're put back at the cuffs once the sleeves are placed.
     const side = m.chestW * .56, armTop = m.neckY + CANVAS_H * .03, armBottom = m.crotchY + CANVAS_H * .1;
     g.save();
     g.globalCompositeOperation = "destination-out";
@@ -1623,13 +1678,21 @@ async function paintDummy(canvas, outfit) {
         // On the womenswear form the knit ends at the high hip, so it skims the body instead of hanging boxy.
         ? m.waistY + (m.crotchY - m.waistY) * .55
         : m.crotchY - CANVAS_H * .025);
-      // Across, the garment's shoulder line matches the form's shoulders plus room to wear
-      // it. Down, the hem lands at its set point, within a small stretch of the photo's own
-      // proportions, so a short jacket runs a little longer rather than being squashed narrow.
-      const ease = jacket ? 1.2 : item.id === "quarter-zip-cable" ? 1.1 : 1.06;
-      const sx = m.shoulderW * ease / garmentSpan(img, .15);
-      const sy = Math.min(sx / .85, Math.max(sx / 1.2, (hem - y) / img.height));
-      return { x: MID - img.width * sx / 2, y, width: img.width * sx, height: img.height * sy };
+      // Across, the garment matches the form at the shoulder line, both measured on the
+      // same row of the body, plus room to wear it. Down, the hem lands at its set point,
+      // within a small stretch of the photo's own proportions, so a short jacket runs a
+      // little longer rather than being squashed narrow.
+      const ease = jacket ? 1.14 : item.id === "quarter-zip-cable" ? 1.08 : 1.04;
+      const shoulderY = Math.round(m.neckY + (m.waistY - m.neckY) * .3);
+      let sy = (hem - y) / img.height, sx, share;
+      for (let pass = 0; pass < 2; pass++) {
+        share = Math.round((shoulderY - y) / (img.height * sy) * 100) / 100;
+        sx = m.spanAt(shoulderY) * ease / garmentSpan(img, share);
+        sy = Math.min(sx / .85, Math.max(sx / 1.2, (hem - y) / img.height));
+      }
+      // Centered on its own shoulders, not its bounding box, so a sleeve that flares
+      // further on one side doesn't push the body off center.
+      return { x: MID - garmentMid(img, share) * sx, y, width: img.width * sx, height: img.height * sy };
   };
   const coat = layer && JACKET_IDS.includes(layer.id) && drawable(layer) ? layer : null;
   const coatImg = coat && garments[order.indexOf(coat)];
@@ -1716,7 +1779,8 @@ async function paintDummy(canvas, outfit) {
         : item.slot === "top" || JACKET_IDS.includes(item.id) ? m.armSpan * 1.06 * widthShare / 1.62
         : form.size * widthShare;
       const width = base * (item === top && layer && JACKET_IDS.includes(layer.id) ? .86 : 1);
-      const height = img.height * width / img.width;
+      // A worn beanie stretches across the head and stops at the brow, so it sits wider than its photo.
+      const height = item.id === "beanie" ? width * .6 : img.height * width / img.width;
       const y = item.slot === "shoes" ? m.footY - height + 4
         : item.slot === "top" || JACKET_IDS.includes(item.id) || item.id === "scarf" ? m.neckY - CANVAS_H * .02
         : CANVAS_H * topEdge;
@@ -1748,6 +1812,7 @@ async function paintDummy(canvas, outfit) {
       return;
     }
     if (item === coat) {
+      handsAt(coatImg, coatBox);
       // The front: everything but the opening, over the pants and the knit.
       const front = document.createElement("canvas");
       front.width = coatImg.width; front.height = coatImg.height;
@@ -1759,6 +1824,7 @@ async function paintDummy(canvas, outfit) {
       g.drawImage(front, coatBox.x, coatBox.y, coatBox.width, coatBox.height);
       return;
     }
+    if (item === top && longSleeves) handsAt(img, box);
     g.drawImage(art, box.x, box.y, box.width, box.height);
     if (item === top) neckOver(item, box);
   });
