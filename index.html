@@ -142,6 +142,8 @@
   .color-pick span { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); font-size: .9rem; }
   .color-pick i { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--swatch-line); }
   .color-pick input:checked + span { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); background: var(--accent-soft); font-weight: 600; }
+  .age-range { width: 100%; margin: 14px 0 6px; accent-color: var(--accent); }
+  .palette-row legend { font-weight: 600; margin-bottom: 8px; }
   .color-pick input:disabled + span { opacity: .35; filter: grayscale(1); cursor: not-allowed; }
   .color-pick input:disabled { cursor: not-allowed; }
   .color-pick i.any { background: conic-gradient(#1f2d4d 0 25%, #d9c8ad 0 50%, #1f1f21 0 75%, #f8f6f1 0); }
@@ -345,7 +347,15 @@ const COLORS = {
   mustard: { label: "Mustard", hex: "#d7a11d", family: "bold" },
   wine:    { label: "Wine",    hex: "#6b1d2f", family: "bold" },
   emerald: { label: "Emerald", hex: "#0f5c46", family: "bold" },
-  plum:    { label: "Plum",    hex: "#4d2147", family: "bold" }
+  plum:    { label: "Plum",    hex: "#4d2147", family: "bold" },
+  ivory:   { label: "Ivory",   hex: "#efe8d6", family: "neutral" },
+  lavender:{ label: "Lavender", hex: "#c4b5e3", family: "pastel" },
+  powder:  { label: "Powder blue", hex: "#b5cde8", family: "pastel" },
+  mint:    { label: "Mint",    hex: "#b9e0cb", family: "pastel" },
+  blush:   { label: "Blush",   hex: "#efc3cc", family: "pastel" },
+  butter:  { label: "Butter",  hex: "#f2e1a2", family: "pastel" },
+  gold:    { label: "Gold",    hex: "#c9a33a", family: "neutral" },
+  silver:  { label: "Silver",  hex: "#b9bec4", family: "neutral" }
 };
 
 const PALETTES = {
@@ -392,7 +402,7 @@ const PREFS = {
 
 const TIERS = { value: "Value", mid: "Mid-range", premium: "Premium" };
 const TIER_MULT = { value: 0.55, mid: 1, premium: 2.4 };
-const SLOTS = { top: "Top", bottom: "Bottom", shoes: "Shoes", layer: "Layer or accessory" };
+const SLOTS = { top: "Top", bottom: "Bottom", shoes: "Shoes", layer: "Outer layer", accessory: "Accessory" };
 
 const ALL = Object.keys(COLORS);
 const SHOE_COLORS = ["black", "white", "grey", "beige", "camel", "rust", "navy", "sage", "red"];
@@ -471,11 +481,14 @@ const STYLES = [
   { id: "power-blazer", slot: "layer", name: "strong-shoulder blazer", fit: "regular", sil: EVEN, occ: ["work", "night"], dept: BOTH, base: 140, colors: LAYER_COLORS, material: "wool blend", tags: ["durable"] },
   { id: "trench",     slot: "layer", name: "slouchy trench coat", fit: "regular", sil: EVEN, occ: ["work", "casual", "weekend"], dept: BOTH, base: 150, colors: ["beige", "camel", "black", "olive", "navy"], material: "cotton gabardine", tags: ["durable"] },
   { id: "crop-puffer", slot: "layer", name: "cropped puffer jacket", fit: "regular", sil: EVEN, occ: ["casual", "weekend"], dept: BOTH, base: 110, colors: LAYER_COLORS, material: "recycled down", tags: ["sustainable"] },
-  { id: "tote",       slot: "layer", name: "slouchy tote bag", fit: "regular", sil: EVEN, occ: ["casual", "work", "weekend"], dept: BOTH, base: 55, colors: LAYER_COLORS, material: "organic cotton canvas", tags: ["sustainable"] },
-  { id: "beanie",     slot: "layer", name: "ribbed beanie", fit: "regular", sil: EVEN, occ: ["casual", "weekend"], dept: BOTH, base: 25, colors: LAYER_COLORS, material: "recycled wool", tags: ["sustainable"] },
-  { id: "crossbody",  slot: "layer", name: "crossbody bag", fit: "regular", sil: EVEN, occ: ["casual", "night", "weekend", "work"], dept: BOTH, base: 60, colors: LAYER_COLORS, material: "recycled nylon", tags: ["sustainable", "trend"] },
-  { id: "scarf",      slot: "layer", name: "wool scarf", fit: "regular", sil: EVEN, occ: ["work", "weekend", "casual"], dept: BOTH, base: 40, colors: LAYER_COLORS, material: "recycled wool", tags: ["sustainable", "durable"] },
-  { id: "cap",        slot: "layer", name: "six-panel cap", fit: "regular", sil: EVEN, occ: ["gym", "athleisure", "casual", "weekend"], dept: BOTH, base: 28, colors: LAYER_COLORS, material: "organic cotton twill", tags: ["sustainable"] }
+  { id: "tote",       slot: "accessory", name: "slouchy tote bag", fit: "regular", sil: EVEN, occ: ["casual", "work", "weekend"], dept: BOTH, base: 55, colors: LAYER_COLORS, material: "organic cotton canvas", tags: ["sustainable"] },
+  { id: "beanie",     slot: "accessory", name: "ribbed beanie", fit: "regular", sil: EVEN, occ: ["casual", "weekend"], dept: BOTH, base: 25, colors: LAYER_COLORS, material: "recycled wool", tags: ["sustainable"] },
+  { id: "chain",      slot: "accessory", name: "chain necklace", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 45, colors: ["gold", "silver"], material: "recycled sterling silver or gold vermeil", tags: ["durable"] },
+  { id: "belt",       slot: "accessory", name: "leather belt", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 50, colors: ["brown", "black", "white"], material: "full-grain leather", tags: ["durable"] },
+  { id: "watch",      slot: "accessory", name: "minimal watch", fit: "regular", sil: EVEN, occ: ["casual", "work", "night", "athleisure", "gym", "weekend"], dept: BOTH, base: 120, colors: ["gold", "silver"], material: "stainless steel", tags: ["durable"] },
+  { id: "crossbody",  slot: "accessory", name: "crossbody bag", fit: "regular", sil: EVEN, occ: ["casual", "night", "weekend", "work"], dept: BOTH, base: 60, colors: LAYER_COLORS, material: "recycled nylon", tags: ["sustainable", "trend"] },
+  { id: "scarf",      slot: "accessory", name: "wool scarf", fit: "regular", sil: EVEN, occ: ["work", "weekend", "casual"], dept: BOTH, base: 40, colors: LAYER_COLORS, material: "recycled wool", tags: ["sustainable", "durable"] },
+  { id: "cap",        slot: "accessory", name: "six-panel cap", fit: "regular", sil: EVEN, occ: ["gym", "athleisure", "casual", "weekend"], dept: BOTH, base: 28, colors: LAYER_COLORS, material: "organic cotton twill", tags: ["sustainable"] }
 ];
 
 /* What's showing up now, as of November 2026. GEN AI PLUG-IN POINT: a real system
@@ -522,7 +535,7 @@ const PHOTO_COLORS = {
 };
 
 /* One record per style + color + price tier. */
-const CATALOG = STYLES.flatMap(style => [...new Set([...(style.slot === "shoes" || style.slot === "layer" ? ALL : style.colors), PHOTO_COLORS[style.id]])].filter(Boolean).flatMap(color => Object.keys(TIERS).map(tier => ({
+const CATALOG = STYLES.flatMap(style => [...new Set([...(["shoes", "layer"].includes(style.slot) || ["cap", "beanie", "crossbody", "tote"].includes(style.id) ? ALL : style.colors), PHOTO_COLORS[style.id]])].filter(Boolean).flatMap(color => Object.keys(TIERS).map(tier => ({
   ...style,
   key: `${style.id}|${color}|${tier}`,
   color,
@@ -551,7 +564,8 @@ const BRANDS = {
   top:    { value: "Uniqlo, H&M, Old Navy",        mid: "J.Crew, Madewell, Everlane",        premium: "Theory, Sunspel, Vince" },
   bottom: { value: "Old Navy, Uniqlo, Gap",        mid: "Levi's, Madewell, Banana Republic", premium: "AG, Citizens of Humanity, Theory" },
   shoes:  { value: "Converse, Vans, Skechers",     mid: "New Balance, Adidas, Dr. Martens",  premium: "Common Projects, Golden Goose, Veja" },
-  layer:  { value: "Uniqlo, Gap, H&M",             mid: "Patagonia, Carhartt WIP, Coach",    premium: "Arc'teryx, Reiss, Longchamp" }
+  layer:  { value: "Uniqlo, Gap, H&M",             mid: "Patagonia, Carhartt WIP, Coach",    premium: "Arc'teryx, Reiss, Longchamp" },
+  accessory: { value: "H&M, Mango, Fossil",         mid: "Coach, Madewell, Timex",            premium: "Mejuri, Tumi, Longines" }
 };
 
 /* ==========================================================================
@@ -562,7 +576,7 @@ const defaultAnswers = () => ({
   dept: "unisex", occasions: [], palettes: [], avoid: [],
   body: "unsure", fit: "regular", silhouette: "balanced",
   budget: [100, 800], sustainable: false, durable: false, trend: true, kstyle: false,
-  favorite: "", pants: "",
+  favorite: "", pants: "", age: 1, style: "classic", accessory: "none",
   consent: true
 });
 const emptyFeedback = () => ({ colors: {}, styles: {}, sils: [], log: [] });
@@ -576,7 +590,7 @@ let openFeedback = null;       // index of the outfit asking "why?"
 let nextId = 1;
 let sortBy = "match";          // "match" | "low" | "high"
 
-const STEP_COUNT = 3;
+const STEP_COUNT = 5;
 const BUDGET_MIN = 100, BUDGET_MAX = 800, BUDGET_GAP = 50;
 const personalized = () => answers.consent;
 /* With personalization off, the engine sees defaults, not the customer's answers. */
@@ -611,54 +625,108 @@ function budgetTier(a) {
   return mid < 200 ? "value" : mid < 480 ? "mid" : "premium";
 }
 
-const ctx_gym = a => a.occasions.includes("gym");
+const ctx_gym = () => false;
 
-/* Simple contrast: a light top gets dark pants and light shoes, and a dark top
-   gets light pants and dark shoes. Pants come from colors that pair well with the
-   top, and each of the three looks changes the texture, cut and shoes. */
-const LIGHT = ["white", "beige", "grey", "sage", "camel", "mustard"];
+/* Contrast: a light top gets dark pants, and a dark top gets light pants, in
+   colors that pair well. Each style has three looks that set the cut, the shoes
+   and an outer layer in the same color as the shoes. */
+const LIGHT = ["white", "beige", "ivory", "grey", "sage", "camel", "mustard", "lavender", "powder", "mint", "blush", "butter"];
 const PAIRS = {
-  white: ["navy", "black", "olive"], beige: ["navy", "black", "olive"], grey: ["black", "navy"],
+  white: ["navy", "black", "olive"], beige: ["navy", "black", "olive"], ivory: ["navy", "black", "olive"], grey: ["black", "navy"],
   sage: ["navy", "black", "slate"], camel: ["navy", "black"], mustard: ["navy", "black", "slate"],
   black: ["beige", "grey", "white"], navy: ["beige", "white", "grey", "camel"], olive: ["beige", "white"],
   slate: ["beige", "white"], rust: ["beige", "white"], brown: ["beige", "white", "grey"],
-  wine: ["beige", "grey", "white", "camel"], emerald: ["beige", "white", "grey"], plum: ["grey", "beige", "white"], red: ["beige", "white", "grey"], cobalt: ["white", "beige", "grey", "camel"]
+  wine: ["beige", "grey", "white", "camel"], emerald: ["beige", "white", "grey"], plum: ["grey", "beige", "white"],
+  red: ["beige", "white", "grey"], cobalt: ["white", "beige", "grey", "camel"],
+  lavender: ["navy", "black", "slate"], powder: ["navy", "black", "slate"], mint: ["navy", "black", "olive"],
+  blush: ["navy", "black", "slate"], butter: ["navy", "black", "olive"]
 };
 const JEANS = ["str-jean", "slim-jean"];
 const KHAKIS = ["khakis", "slim-khakis"];
-const LOOKS = [
-  { tops: ["quarter-zip", "quarter-zip-short"], dark: ["str-jean", "slim-jean", "cig-pant"], light: ["khakis", "slim-khakis", "str-pant"],
-    shoes: ["low-snk", "chunky-snk"], lightShoes: ["white"], darkShoes: ["white"], layers: ["chore"] },
-  { tops: ["quarter-zip-waffle", "quarter-zip-fleece", "quarter-zip-short-waffle"], dark: ["str-pant", "cig-pant"], light: ["str-jean", "slim-khakis", "str-pant"],
-    shoes: ["loafer", "chelsea"], lightShoes: ["brown"], darkShoes: ["brown"], layers: ["trench", "chore"] },
-  { tops: ["quarter-zip-cable"], dark: ["wide-pant", "cargo"], light: ["wide-pant", "khakis"],
-    shoes: ["chelsea", "chunky-snk", "loafer"], lightShoes: ["black"], darkShoes: ["black"], layers: ["blazer", "power-blazer"] }
-];
 const isLight = color => LIGHT.includes(color);
-/* The quiz offers royal, jewel-tone colors for the quarter zip. */
-const ROYAL = ["wine", "cobalt", "emerald", "plum", "navy"];
-const PANTS_CHOICES = ["beige", "camel", "white", "grey", "black", "navy", "slate", "olive"];
+
+const QUIZ_PALETTES = {
+  bold:    { label: "Bold",    colors: ["wine", "cobalt", "emerald", "plum", "navy"] },
+  neutral: { label: "Neutral", colors: ["black", "brown", "camel", "ivory", "grey"] },
+  pastel:  { label: "Pastel",  colors: ["lavender", "powder", "mint", "blush", "butter"] }
+};
+const AGES = ["18–24", "25–34", "35–44", "45–54", "55+"];
+const STYLE_OPTIONS = {
+  classic:    { label: "Classic",    desc: "Tailored pieces and leather shoes" },
+  athleisure: { label: "Athleisure", desc: "Sporty, comfortable and easy to move in" },
+  minimalist: { label: "Minimalist", desc: "Clean lines and simple shapes" },
+  streetwear: { label: "Streetwear", desc: "Relaxed cuts and chunky sneakers" },
+  bohemian:   { label: "Bohemian",   desc: "Soft textures, wide legs and warm leather" }
+};
+const ACCESSORIES = {
+  none:    { label: "None",    ids: [] },
+  hat:     { label: "Hat",     ids: ["cap", "beanie"] },
+  jewelry: { label: "Jewelry", ids: ["chain"] },
+  bag:     { label: "Bag",     ids: ["crossbody", "tote"] },
+  belt:    { label: "Belt",    ids: ["belt"] },
+  watch:   { label: "Watch",   ids: ["watch"] }
+};
+/* Pants that come in every color, so a pairing is always possible. */
+const ANY_CUT = ["str-pant", "wide-pant", "cargo", "track-pant"];
+const look = (tops, dark, light, shoes, shoeColor, layers) => ({ tops, dark, light, shoes, shoeColor, layers });
+const STYLE_LOOKS = {
+  classic: [
+    look(["quarter-zip"], ["str-pant", "cig-pant"], ["khakis", "str-pant"], ["loafer"], "brown", ["blazer", "trench"]),
+    look(["quarter-zip-cable"], ["str-jean", "str-pant"], ["slim-khakis", "khakis"], ["chelsea"], "black", ["trench", "blazer"]),
+    look(["quarter-zip-short"], ["cig-pant", "slim-jean"], ["slim-khakis", "str-pant"], ["low-snk"], "white", ["chore"])
+  ],
+  athleisure: [
+    look(["quarter-zip-fleece"], ["tapered-jog", "track-pant"], ["track-pant", "tapered-jog"], ["runner"], "white", ["track-top"]),
+    look(["quarter-zip-short"], ["track-pant"], ["track-pant"], ["chunky-snk"], "white", ["track-top"]),
+    look(["quarter-zip"], ["tapered-jog"], ["tapered-jog"], ["runner"], "black", ["track-top"])
+  ],
+  minimalist: [
+    look(["quarter-zip"], ["cig-pant", "slim-jean"], ["str-pant", "slim-khakis"], ["low-snk"], "white", ["chore"]),
+    look(["quarter-zip-short"], ["str-pant"], ["str-pant"], ["loafer"], "black", ["blazer"]),
+    look(["quarter-zip-fleece"], ["slim-jean", "cig-pant"], ["str-pant"], ["chelsea"], "black", ["blazer"])
+  ],
+  streetwear: [
+    look(["quarter-zip-waffle"], ["cargo", "wide-jean"], ["cargo", "parachute"], ["chunky-snk"], "white", ["track-top"]),
+    look(["quarter-zip-short-waffle"], ["parachute", "wide-jean"], ["cargo"], ["chunky-snk"], "black", ["chore"]),
+    look(["quarter-zip"], ["wide-jean", "cargo"], ["wide-sweat", "cargo"], ["low-snk"], "white", ["track-top"])
+  ],
+  bohemian: [
+    look(["quarter-zip-cable"], ["wide-pant"], ["wide-pant"], ["chelsea"], "brown", ["trench"]),
+    look(["quarter-zip-waffle"], ["wide-pant", "cargo"], ["wide-pant"], ["loafer"], "brown", ["chore"]),
+    look(["quarter-zip-short-waffle"], ["str-pant", "wide-pant"], ["wide-pant"], ["loafer"], "brown", ["chore"])
+  ]
+};
 
 function fitsFormula(item, ctx) {
-  const look = LOOKS[ctx.look === undefined ? 0 : ctx.look];
+  const looks = STYLE_LOOKS[ctx.style] || STYLE_LOOKS.classic;
+  const recipe = looks[ctx.look === undefined ? 0 : ctx.look];
+  const all = ctx.look === undefined;
   const light = isLight(ctx.bread);
-  if (item.slot === "top") return item.color === ctx.bread && (ctx.look === undefined ? item.id.startsWith("quarter-zip") : look.tops.includes(item.id));
+  const shoes = ctx.chosen && ctx.chosen.find(i => i.slot === "shoes");
+  if (item.slot === "top") return item.color === ctx.bread && (all ? item.id.startsWith("quarter-zip") : recipe.tops.includes(item.id));
   if (item.slot === "bottom") {
-    const ids = ctx.look === undefined ? LOOKS.flatMap(l => light ? l.dark : l.light) : light ? look.dark : look.light;
-    const colors = ctx.pants && PAIRS[ctx.bread].includes(ctx.pants) ? [ctx.pants] : PAIRS[ctx.bread];
-    return ids.includes(item.id) && colors.includes(item.color);
+    const ids = ctx.anyCut ? ANY_CUT : all ? looks.flatMap(l => light ? l.dark : l.light) : light ? recipe.dark : recipe.light;
+    return ids.includes(item.id) && PAIRS[ctx.bread].includes(item.color);
   }
   if (item.slot === "shoes") {
-    // Shoes stay in real shoe colors, light or dark to match the top.
-    const ids = ctx.gym ? ["runner", "chunky-snk"] : ctx.look === undefined ? LOOKS.flatMap(l => l.shoes) : look.shoes;
-    const colors = ctx.gym ? ["white", "black"] : ctx.look === undefined ? ["white", "brown", "black"] : light ? look.lightShoes : look.darkShoes;
-    return ids.includes(item.id) && colors.includes(item.color);
+    const ids = all ? looks.flatMap(l => l.shoes) : recipe.shoes;
+    return ids.includes(item.id) && (all ? ["white", "brown", "black"].includes(item.color) : item.color === recipe.shoeColor);
   }
   if (item.slot === "layer") {
     // The outer layer repeats the shoe color, so the look is framed top to bottom.
-    const shoes = ctx.chosen && ctx.chosen.find(i => i.slot === "shoes");
-    const ids = ctx.look === undefined ? LOOKS.flatMap(l => l.layers) : look.layers;
-    return !ctx.gym && !!shoes && ids.includes(item.id) && item.color === shoes.color;
+    const ids = all ? looks.flatMap(l => l.layers) : recipe.layers;
+    return !!shoes && ids.includes(item.id) && item.color === shoes.color;
+  }
+  if (item.slot === "accessory") {
+    const pick = ACCESSORIES[ctx.accessory] || ACCESSORIES.none;
+    if (!pick.ids.includes(item.id)) return false;
+    if (item.id === "chain") return item.color === (ctx.style === "bohemian" ? "gold" : "silver");
+    if (item.id === "watch") return item.color === (ctx.style === "bohemian" || ctx.style === "classic" ? "gold" : "silver");
+    if (item.id === "cap") return ["athleisure", "streetwear"].includes(ctx.style) && !!shoes && item.color === shoes.color;
+    if (item.id === "beanie") return !["athleisure", "streetwear"].includes(ctx.style) && !!shoes && item.color === shoes.color;
+    // A belt is leather: black with black shoes, brown otherwise.
+    if (item.id === "belt") return !!shoes && item.color === (shoes.color === "black" ? "black" : "brown");
+    return !!shoes && item.color === shoes.color;
   }
   return false;
 }
@@ -672,7 +740,8 @@ function pool(slot, ctx) {
     return fitsFormula(item, ctx);
   };
   const allowed = CATALOG.filter(item => matches(item) && !a.avoid.includes(item.color));
-  if (slot === "layer") return allowed;
+  if (slot === "layer" || slot === "accessory") return allowed;
+  if (slot === "bottom" && !allowed.length && !ctx.anyCut) { ctx.anyCut = true; return pool(slot, ctx); }
   const forOccasion = allowed.filter(item => item.occ.includes(ctx.occasion));
   if (forOccasion.length) return forOccasion;
   if (allowed.length) return allowed;
@@ -708,6 +777,8 @@ function score(item, ctx) {
   if (a.trend && item.color === "cobalt") total += 1;
   if (item.photo) total += 3;
   if (item.slot === "shoes" && REAL_SHOES[`${item.id}|${item.color}`]) total += 10;
+  if (a.age <= 1 && item.tags.includes("trend")) total += 1.5;
+  if (a.age >= 3 && item.tags.includes("durable")) total += 1.5;
   if (item.color === a.favorite && (item.slot === "top" || item.slot === "bottom") && !chosen.some(c => c.color === a.favorite)) total += 7;
   if (a.favorite && item.color === a.favorite && chosen.some(c => c.color === a.favorite)) total -= 6;
 
@@ -761,8 +832,9 @@ function buildOutfit(index, keepSilhouette) {
     hero: families[index % families.length],
     tier: budgetTier(a),
     bread: a.favorite || "navy",
-    look: index % LOOKS.length,
-    pants: a.pants,
+    look: index % 3,
+    style: a.style,
+    accessory: a.accessory,
     gym: ctx_gym(a)
   };
 
@@ -774,7 +846,7 @@ function buildOutfit(index, keepSilhouette) {
   if (personalized()) fitBudget(items, a);
 
   return {
-    id: nextId++, silhouette, occasion: ctx.occasion, items, look: ctx.look,
+    id: nextId++, silhouette, occasion: ctx.occasion, items, look: ctx.look, style: a.style,
     relaxedAvoid: !!ctx.relaxedAvoid, seen: new Set(), savedId: null
   };
 }
@@ -820,7 +892,7 @@ function swapItem(index, slot) {
   const room = a.budget[1] - rest.reduce((sum, i) => sum + i.price, 0);
   const ctx = {
     a, silhouette: outfit.silhouette, occasion: outfit.occasion, chosen: rest,
-    hero: null, tier: budgetTier(a), usedColors: new Set(), bread: a.favorite || "navy", look: outfit.look, gym: ctx_gym(a), pants: a.pants,
+    hero: null, tier: budgetTier(a), usedColors: new Set(), bread: a.favorite || "navy", look: outfit.look, gym: false, style: a.style, accessory: a.accessory,
     usedStyles: new Set(current ? [current.id] : [])
   };
   const options = pool(slot, ctx).filter(i => !outfit.seen.has(`${i.id}|${i.color}`));
@@ -891,7 +963,9 @@ function proportionText(outfit) {
   const pattern = `${cap(tone(top))} on top, ${tone(bottom)} in the middle, ${tone(shoes)} at your feet.`;
   const coat = outfit.items.layer;
   const coatLine = coat ? ` The ${c(coat.color)} ${coat.name} matches your ${shoes.name}, which ties the look together.` : "";
-  return `${pattern} The ${c(bottom.color)} ${bottom.name} make the ${c(top.color)} ${top.name} and ${c(shoes.color)} ${shoes.name} stand out. ${cap(c(bottom.color))} and ${c(top.color)} are an easy, classic pairing.${coatLine}`;
+  const extra = outfit.items.accessory;
+  const extraLine = extra ? ` A ${c(extra.color)} ${extra.name} finishes it.` : "";
+  return `${pattern} The ${c(bottom.color)} ${bottom.name} make the ${c(top.color)} ${top.name} and ${c(shoes.color)} ${shoes.name} stand out. ${cap(c(bottom.color))} and ${c(top.color)} are an easy, classic pairing.${coatLine}${extraLine}`;
 }
 
 function colorStory(outfit) {
@@ -929,9 +1003,7 @@ function detailsText(outfit, a) {
   const items = Object.values(outfit.items).filter(Boolean);
   const total = outfitTotal(outfit.items);
   const parts = [];
-  if (a.occasions.length && outfit.items.top.occ.includes(outfit.occasion)) {
-    parts.push(`Chosen with ${OCCASIONS[outfit.occasion].toLowerCase()} in mind.`);
-  }
+  if (STYLE_OPTIONS[a.style]) parts.push(`Styled ${STYLE_OPTIONS[a.style].label.toLowerCase()}.`);
   const [low, high] = a.budget;
   if (total > high) parts.push(`At $${total}, this is over your $${low}–$${high} range; it was the closest match we could build.`);
   else if (total < low) parts.push(`At $${total}, this comes in under your $${low}–$${high} range.`);
@@ -1031,6 +1103,8 @@ const WEAR = {
 
 /* Shoes photographed in their real color. These are drawn as-is, never tinted. */
 const REAL_SHOES = { "low-snk|white": "low-snk-white", "loafer|brown": "loafer-brown" };
+/* Accessories photographed in their real color, drawn as-is. */
+const REAL_ACCESSORIES = {};
 function loadShoe(name) {
   const key = "shoe:" + name;
   if (!imageCache[key]) {
@@ -1168,9 +1242,13 @@ async function paintDummy(canvas, outfit) {
   const form = FORMS[activeAnswers().dept];
   const { top, bottom, shoes, layer } = outfit.items;
   // Shoes go down first so the pants hem can sit on top of them.
-  const order = [shoes, bottom, top, layer].filter(Boolean);
-  const real = item => item.slot === "shoes" && REAL_SHOES[`${item.id}|${item.color}`];
-  const [dummy, ...garments] = await Promise.all([loadImage(form.src), ...order.map(i => real(i) ? loadShoe(real(i)) : loadImage(WEAR[i.id][0]))]);
+  const extra = outfit.items.accessory;
+  const realAcc = item => item.slot === "accessory" && REAL_ACCESSORIES[`${item.id}|${item.color}`];
+  // Belts and watches sit under the sweater or are too small to read, so they show in the list only.
+  const drawable = item => item.slot !== "accessory" || (WEAR[item.id] && !["belt", "watch"].includes(item.id)) || (item.id === "chain" && realAcc(item));
+  const order = [shoes, bottom, top, layer, extra].filter(Boolean).filter(drawable);
+  const real = item => (item.slot === "shoes" && REAL_SHOES[`${item.id}|${item.color}`]) || realAcc(item);
+  const [dummy, ...garments] = await Promise.all([loadImage(form.src), ...order.map(i => realAcc(i) ? loadShoe("../accessories/" + realAcc(i)) : real(i) ? loadShoe(real(i)) : loadImage(WEAR[i.id][0]))]);
   const g = canvas.getContext("2d");
   g.clearRect(0, 0, CANVAS_W, CANVAS_H);
   g.drawImage(dummy, MID - dummy.width / 2, 0);
@@ -1193,6 +1271,9 @@ async function paintDummy(canvas, outfit) {
       }[item.id] || m.crotchY - CANVAS_H * .025;
       const scale = Math.min((hem - y) / img.height, m.armSpan * (jacket ? 1.3 : 1.1) / img.width);
       box = { x: MID - img.width * scale / 2, y, width: img.width * scale, height: img.height * scale };
+    } else if (item.id === "chain") {
+      const width = m.chestW * .5;
+      box = { x: MID - width / 2, y: m.neckY + CANVAS_H * .005, width, height: img.height * width / img.width };
     } else if (item.slot === "shoes") {
       // A pair standing naturally spans about the hips; foot spread varies too much between dummies.
       const width = m.hipW * .92;
@@ -1227,12 +1308,22 @@ async function paintDummy(canvas, outfit) {
       u.globalCompositeOperation = "destination-in";
       u.drawImage(art, box.x, box.y, box.width, box.height);
       const opening = m.chestW * .3;
+      const coatHem = box.y + box.height;
       g.save();
       g.beginPath();
-      g.rect(MID - opening / 2, t.y, opening, Math.min(t.height, box.y + box.height - t.y));
+      g.rect(MID - opening / 2, t.y, opening, Math.min(t.height, coatHem - t.y));
       g.clip();
       g.drawImage(under, 0, 0);
       g.restore();
+      // Below a cropped coat, the rest of the top shows as normal.
+      if (coatHem < t.y + t.height) {
+        g.save();
+        g.beginPath();
+        g.rect(0, coatHem - 2, CANVAS_W, t.y + t.height - coatHem + 2);
+        g.clip();
+        g.drawImage(drawn.top.art, t.x, t.y, t.width, t.height);
+        g.restore();
+      }
     }
   });
 }
@@ -1280,17 +1371,12 @@ function howWePersonalize(tag = "h2") {
 
 function describeAnswers() {
   const a = answers;
-  const none = "No preference";
   return [
     ["Shopping in", DEPTS[a.dept]],
-    ["Occasions", a.occasions.map(o => OCCASIONS[o]).join(", ") || none],
-    ["Palettes", a.palettes.map(p => PALETTES[p].label).join(", ") || none],
-    ["Colors to avoid", a.avoid.map(c => COLORS[c].label).join(", ") || "None"],
-    ["Body type", BODY_TYPES[a.body].label],
-    ["Fit", FITS[a.fit]],
-    ["Silhouette goal", SILHOUETTES[a.silhouette].label],
-    ["Budget per outfit", `$${a.budget[0]}–$${a.budget[1]}`],
-    ["Shopping preferences", Object.keys(PREFS).filter(p => a[p]).map(p => PREFS[p].label).join(", ") || none]
+    ["Age range", AGES[a.age]],
+    ["Color", a.favorite ? COLORS[a.favorite].label : "Not picked yet"],
+    ["Style", STYLE_OPTIONS[a.style].label],
+    ["Accessory", ACCESSORIES[a.accessory].label]
   ];
 }
 
@@ -1301,49 +1387,58 @@ function option(type, name, value, label, desc, checked, inner = "") {
 
 function renderIntro() {
   return `<div class="wrap fade">
-    <p class="eyebrow">Three quick questions</p>
+    <p class="eyebrow">Five quick questions</p>
     <h1 class="intro-title" tabindex="-1">Outfits built from what you tell us.</h1>
-    <p class="lede">Answer three quick questions and get three quarter-zip outfits with easy, high-contrast color pairings.</p>
+    <p class="lede">Answer five quick questions and get three quarter-zip outfits in your style, with easy color pairings.</p>
     <ol class="intro-steps">
-      <li><b>1</b> Pick a color</li>
-      <li><b>2</b> Choose a section</li>
-      <li><b>3</b> Pick an occasion</li>
+      <li><b>1</b> Gender</li>
+      <li><b>2</b> Age range</li>
+      <li><b>3</b> Color palette</li>
+      <li><b>4</b> Style</li>
+      <li><b>5</b> Accessory</li>
     </ol>
     <button class="btn primary" data-action="start">Start the quiz</button>
     <div class="intro-panel">${howWePersonalize()}</div>
   </div>`;
 }
 
+const pick = (name, c) => `<label class="color-pick"><input type="radio" name="${name}" value="${c}" ${answers.favorite === c ? "checked" : ""}><span><i style="background:${COLORS[c].hex}" aria-hidden="true"></i>${COLORS[c].label}</span></label>`;
 const STEP_VIEWS = {
   1: () => ({
-    title: "Pick your colors",
-    hint: "Pick a royal color for your quarter zip, then a color for your pants.",
-    body: `<fieldset class="section"><legend class="sr">Main color</legend>
-        <div class="color-picks">${ROYAL.map(c => `<label class="color-pick"><input type="radio" name="favorite" value="${c}" ${answers.favorite === c ? "checked" : ""}><span><i style="background:${COLORS[c].hex}" aria-hidden="true"></i>${COLORS[c].label}</span></label>`).join("")}</div>
-      </fieldset>
-      ${answers.favorite ? `<fieldset class="section"><legend>Pants color</legend>
-        <p class="hint">Only colors that pair with ${COLORS[answers.favorite].label.toLowerCase()} can be picked. The rest are greyed out.</p>
-        <div class="color-picks">
-          <label class="color-pick"><input type="radio" name="pants" value="" ${!answers.pants ? "checked" : ""}><span><i class="any" aria-hidden="true"></i>Any match</span></label>
-          ${PANTS_CHOICES.filter(c => c !== answers.favorite).map(c => {
-            const ok = PAIRS[answers.favorite].includes(c);
-            return `<label class="color-pick"><input type="radio" name="pants" value="${c}" ${ok ? "" : "disabled"} ${answers.pants === c ? "checked" : ""}><span><i style="background:${COLORS[c].hex}" aria-hidden="true"></i>${COLORS[c].label}${ok ? "" : '<span class="sr"> (does not pair)</span>'}</span></label>`;
-          }).join("")}
-        </div>
-      </fieldset>` : ""}`
-  }),
-  2: () => ({
     title: "Who are we dressing?",
     hint: "This sets the section and the dummy. We never infer it.",
-    body: `<fieldset class="section"><legend class="sr">Section</legend>
+    body: `<fieldset class="section"><legend class="sr">Gender</legend>
         <div class="opts">${Object.entries(DEPTS).map(([k, v]) => option("radio", "dept", k, v, "", answers.dept === k)).join("")}</div>
       </fieldset>`
   }),
+  2: () => ({
+    title: "What's your age range?",
+    hint: "Only used to lean a little more trend-led or a little more classic. It never limits what you see.",
+    body: `<div class="section">
+        <p class="budget-value" id="ageValue">${AGES[answers.age]}</p>
+        <input class="age-range" type="range" name="age" min="0" max="${AGES.length - 1}" step="1" value="${answers.age}" aria-label="Age range" aria-valuetext="${AGES[answers.age]}">
+        <div class="range-ends"><span>${AGES[0]}</span><span>${AGES[AGES.length - 1]}</span></div>
+      </div>`
+  }),
   3: () => ({
-    title: "Where are you headed?",
-    hint: "Pick the one that fits best.",
-    body: `<fieldset class="section"><legend class="sr">Occasion</legend>
-        <div class="opts">${Object.entries(OCCASIONS).map(([k, v]) => option("radio", "occasion", k, v, "", answers.occasions[0] === k)).join("")}</div>
+    title: "Pick your palette",
+    hint: "Choose a palette, then the shade for your quarter zip.",
+    body: Object.entries(QUIZ_PALETTES).map(([k, pal]) => `<fieldset class="section palette-row"><legend>${pal.label}</legend>
+        <div class="color-picks">${pal.colors.map(c => pick("favorite", c)).join("")}</div>
+      </fieldset>`).join("")
+  }),
+  4: () => ({
+    title: "What's your style?",
+    hint: "Each style gets three looks of its own.",
+    body: `<fieldset class="section"><legend class="sr">Style</legend>
+        <div class="opts">${Object.entries(STYLE_OPTIONS).map(([k, v]) => option("radio", "style", k, v.label, v.desc, answers.style === k)).join("")}</div>
+      </fieldset>`
+  }),
+  5: () => ({
+    title: "Add an accessory?",
+    hint: "It's matched to your shoes or your style.",
+    body: `<fieldset class="section"><legend class="sr">Accessory</legend>
+        <div class="opts three">${Object.entries(ACCESSORIES).map(([k, v]) => option("radio", "accessory", k, v.label, "", answers.accessory === k)).join("")}</div>
       </fieldset>`
   })
 };
@@ -1392,7 +1487,7 @@ function renderOutfit(outfit, index) {
       <div>
         <p class="eyebrow">${["top", "bottom", "shoes"].map(k => isLight(outfit.items[k].color) ? "Light" : "Dark").join(" · ")}</p>
         <h3 class="card-title" id="outfit-title-${index}" tabindex="-1">Look ${index + 1}: ${COLORS[outfit.items.top.color].label} ${outfit.items.top.name}</h3>
-        <p class="item-meta">${OCCASIONS[outfit.occasion]}</p>
+        <p class="item-meta">${(STYLE_OPTIONS[outfit.style] || STYLE_OPTIONS.classic).label} look</p>
         ${personalized() ? `<p class="match-note">${index === 0 && sortBy === "match" ? "<b>Best match.</b> " : ""}Meets ${matchChecks(outfit).met} of ${matchChecks(outfit).count} checks against your answers</p>` : ""}
       </div>
       <p class="total"><span class="sr">Mock outfit total: </span>$${outfitTotal(outfit.items)}</p>
@@ -1538,7 +1633,7 @@ app.addEventListener("change", event => {
     answers.favorite = input.value;
     answers.palettes = [...new Set([COLORS[input.value].family, "neutral"])];
     if (!PAIRS[input.value].includes(answers.pants)) answers.pants = "";
-    render(`[name="favorite"][value="${input.value}"]`);
+
   } else if (input.name === "occasion") answers.occasions = [input.value];
   else if (input.type === "radio") answers[input.name] = input.value;
 });
@@ -1546,6 +1641,12 @@ app.addEventListener("change", event => {
 app.addEventListener("input", event => {
   const input = event.target;
   if (input.type !== "range") return;
+  if (input.name === "age") {
+    answers.age = Number(input.value);
+    document.getElementById("ageValue").textContent = AGES[answers.age];
+    input.setAttribute("aria-valuetext", AGES[answers.age]);
+    return;
+  }
   const value = Number(input.value);
   if (input.id === "budgetLow") {
     answers.budget[0] = Math.min(value, answers.budget[1] - BUDGET_GAP);
@@ -1579,7 +1680,8 @@ const actions = {
     toast("Outfits reordered.");
   },
   next()   {
-    if (view === 3 && !answers.occasions.length) answers.occasions = ["casual"];
+    if (view === 3 && !answers.favorite) { toast("Pick a color to continue."); return; }
+    if (!answers.occasions.length) answers.occasions = ["casual"];
     if (view < STEP_COUNT) { view += 1; render(); return; }
     generateAll();
     view = "results";
