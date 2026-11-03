@@ -330,7 +330,7 @@ const COLORS = {
   beige:   { label: "Beige",   hex: "#d9c8ad", family: "neutral" },
   olive:   { label: "Olive",   hex: "#5f6336", family: "earth" },
   rust:    { label: "Rust",    hex: "#a64b24", family: "earth" },
-  camel:   { label: "Camel",   hex: "#b98a4f", family: "earth" },
+  camel:   { label: "Camel",   hex: "#b8976c", family: "earth" },
   brown:   { label: "Brown",   hex: "#5a3a26", family: "earth" },
   navy:    { label: "Navy",    hex: "#1f2d4d", family: "cool" },
   slate:   { label: "Slate",   hex: "#566675", family: "cool" },
@@ -697,6 +697,27 @@ const STYLE_LOOKS = {
   ]
 };
 
+/* Layering, per Mr Porter, Marie Claire and Who What Wear: a coat should sit at a
+   different depth from the knit (darker over light, lighter over dark), and coats
+   look best in classic shades. Match the shoes when that still contrasts the knit. */
+const COAT_SHADES = {
+  classic: ["camel", "navy", "grey", "black", "brown"],
+  minimalist: ["black", "ivory", "grey", "navy", "camel"],
+  streetwear: ["black", "olive", "ivory", "grey", "navy"],
+  bohemian: ["camel", "brown", "olive", "ivory", "navy"],
+  athleisure: ["black", "grey", "white", "navy", "olive"]
+};
+function luminance(color) {
+  const v = parseInt(COLORS[color].hex.slice(1), 16);
+  const lin = c => { c /= 255; return c <= .03928 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4; };
+  return .2126 * lin((v >> 16) & 255) + .7152 * lin((v >> 8) & 255) + .0722 * lin(v & 255);
+}
+function coatColorFor(top, bottom, shoes, style) {
+  const contrasts = c => c !== top.color && c !== (bottom && bottom.color) && Math.abs(luminance(c) - luminance(top.color)) >= .12;
+  const options = [shoes && shoes.color, ...(COAT_SHADES[style] || COAT_SHADES.classic)].filter(Boolean);
+  return options.find(contrasts) || options.find(c => c !== top.color) || "black";
+}
+
 function fitsFormula(item, ctx) {
   const looks = STYLE_LOOKS[ctx.style] || STYLE_LOOKS.classic;
   const recipe = looks[ctx.look === undefined ? 0 : ctx.look];
@@ -716,9 +737,10 @@ function fitsFormula(item, ctx) {
     return ids.includes(item.id) && (all ? ["white", "brown", "black"].includes(item.color) : item.color === recipe.shoeColor);
   }
   if (item.slot === "layer") {
-    // The outer layer repeats the shoe color, so the look is framed top to bottom.
     const ids = all ? looks.flatMap(l => l.layers) : recipe.layers;
-    return !!shoes && ids.includes(item.id) && item.color === shoes.color;
+    const topPick = ctx.chosen && ctx.chosen.find(i => i.slot === "top");
+    const bottomPick = ctx.chosen && ctx.chosen.find(i => i.slot === "bottom");
+    return !!shoes && !!topPick && ids.includes(item.id) && item.color === coatColorFor(topPick, bottomPick, shoes, ctx.style);
   }
   if (item.slot === "accessory") {
     const pick = ACCESSORIES[ctx.accessory] || ACCESSORIES.none;
@@ -914,7 +936,10 @@ function swapItem(index, slot) {
   }
   outfit.items[slot] = ranked[0][1];
   const coat = outfit.items.layer;
-  if (slot === "shoes" && coat) outfit.items.layer = BY_KEY.get(`${coat.id}|${outfit.items.shoes.color}|${coat.tier}`) || coat;
+  if (slot !== "layer" && coat) {
+    const shade = coatColorFor(outfit.items.top, outfit.items.bottom, outfit.items.shoes, outfit.style);
+    outfit.items.layer = BY_KEY.get(`${coat.id}|${shade}|${coat.tier}`) || coat;
+  }
   outfit.savedId = null;
   return true;
 }
@@ -972,7 +997,9 @@ function proportionText(outfit) {
   const matched = top.color === bottom.color;
   const pattern = matched ? `A matching ${c(top.color)} set, finished with ${c(shoes.color)} ${shoes.name}.` : `${cap(tone(top))} on top, ${tone(bottom)} in the middle, ${tone(shoes)} at your feet.`;
   const coat = outfit.items.layer;
-  const coatLine = coat ? ` The ${c(coat.color)} ${coat.name} matches your ${shoes.name}, which ties the look together.` : "";
+  const coatLine = !coat ? "" : coat.color === shoes.color
+    ? ` The ${c(coat.color)} ${coat.name} matches your ${shoes.name} and sits ${luminance(coat.color) > luminance(top.color) ? "lighter" : "darker"} than the knit, so the layers read clearly.`
+    : ` The ${c(coat.color)} ${coat.name} sits ${luminance(coat.color) > luminance(top.color) ? "lighter" : "darker"} than the ${c(top.color)} knit, so the layers read clearly.`;
   const extra = outfit.items.accessory;
   const extraLine = extra ? ` A ${c(extra.color)} ${extra.name} finishes it.` : "";
   return `${pattern} The ${c(bottom.color)} ${bottom.name} make the ${c(top.color)} ${top.name} and ${c(shoes.color)} ${shoes.name} stand out. ${cap(c(bottom.color))} and ${c(top.color)} are an easy, classic pairing.${coatLine}${extraLine}${outfit.inspo ? ` Inspired by ${outfit.inspo}.` : ""}`;
