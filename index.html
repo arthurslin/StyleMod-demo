@@ -1782,7 +1782,9 @@ function placeBottom(img, item, m, shoeTop, meet) {
     // The widest the bottoms get just under the hem, so a wide leg never steps out past it.
     const shareAt = y => Math.round(Math.min(1, Math.max(0, (y - top) / (hem - top))) * 100) / 100;
     const at = Math.max(...[2, 8, 14, 20].map(dy => garmentSpan(img, shareAt(meet.y + dy)))) * width / img.width;
-    width *= Math.min(1.4, Math.max(.55, meet.w / at));
+    // Under a jacket the hem only has to cover the pants: they narrow to fit inside it but
+    // keep their own fit at the hips. Under a knit they match it, widening only a little.
+    width *= Math.min(meet.cover ? 1 : 1.15, Math.max(.55, meet.w / at));
   }
   return { x: MID - width / 2, y: top, width, height: hem - top };
 }
@@ -1948,7 +1950,7 @@ async function paintDummy(canvas, outfit) {
   const waistCap = !topImg0 ? null
     // The narrowest of a few rows just above the hem, so a sleeve hanging against the body isn't counted.
     : !coat ? { y: knit0.y + knit0.height * sideHem(topImg0), w: Math.min(...[.005, .03, .06, .09].map(d => garmentRun(topImg0, Math.round((sideHem(topImg0) - d) * 1000) / 1000))) * knit0.width / topImg0.width * .97 }
-    : WAIST_JACKETS.includes(coat.id) ? { y: coatBox.y + coatBox.height * (hemShare(WEAR[coat.id][0]) - .03), w: garmentBody(coatImg, hemShare(WEAR[coat.id][0]) - .03) * coatBox.width / coatImg.width * .97 }
+    : WAIST_JACKETS.includes(coat.id) ? { y: coatBox.y + coatBox.height * (hemShare(WEAR[coat.id][0]) - .03), w: garmentBody(coatImg, hemShare(WEAR[coat.id][0]) - .03) * coatBox.width / coatImg.width * .97, cover: true }
     : null;
   order.forEach((item, i) => {
     const [, topEdge, widthShare, , offset] = WEAR[item.id] || [];
