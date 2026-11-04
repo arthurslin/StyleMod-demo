@@ -1609,6 +1609,62 @@ function formHands(dummy, m) {
   }
   return handMarks[dummy.src];
 }
+/* The neck opening of a top: row by row from the top, the see-through run around the
+   middle that has garment on both sides, down to where the front closes. A mask the size
+   of the photo, or null when the top has no opening of its own. */
+const holeMarks = new Map();
+function neckHole(img) {
+  if (!holeMarks.has(img.src)) {
+    const solid = alphaOf(img), W = img.width, H = img.height, cx = Math.round(W / 2);
+    const mask = document.createElement("canvas");
+    mask.width = W; mask.height = H;
+    const m = mask.getContext("2d");
+    m.fillStyle = "#000";
+    // Each row near the top: an opening (see-through at the middle, garment both sides),
+    // garment across the middle (with its width), or outside the garment.
+    const rowsAt = [];
+    for (let y = 0; y < H * .35; y++) {
+      let l = cx, r = cx;
+      const fill = solid(cx, y);
+      while (l > 0 && solid(l - 1, y) === fill) l--;
+      while (r < W - 1 && solid(r + 1, y) === fill) r++;
+      rowsAt.push(fill ? { kind: "band", l, r } : l > 0 && r < W - 1 ? { kind: "hole", l, r } : { kind: "out" });
+    }
+    // The neck opening is the longest run of opening rows; the back of the neckline, where
+    // a band of it is left just above, belongs behind the neck too.
+    let best = [0, 0];
+    for (let y = 0; y < rowsAt.length;) {
+      let e = y;
+      while (e < rowsAt.length && rowsAt[e].kind === "hole") e++;
+      if (e - y > best[1] - best[0]) best = [y, e];
+      y = Math.max(e, y + 1);
+    }
+    let from = best[0];
+    while (from > 0 && rowsAt[from - 1].kind === "band" && rowsAt[from - 1].r - rowsAt[from - 1].l < W * .5) from--;
+    for (let y = from; y < best[1]; y++) {
+      const { l, r } = rowsAt[y];
+      m.fillRect(l - 1, y - 1, r - l + 3, 3);
+    }
+    // And a couple of rows above, so the band's soft top edge doesn't leave a line across the neck.
+    if (best[1] > best[0]) { const { l, r } = rowsAt[from]; m.fillRect(l - 1, Math.max(0, from - 3), r - l + 3, 3); }
+    const rows = best[1] - best[0];
+    holeMarks.set(img.src, rows > 3 ? mask : null);
+  }
+  return holeMarks.get(img.src);
+}
+/* Where a top's body ends at its sides, as a share of its height: on a shirt the tail
+   curves lower at the middle, so the pants start where the side seams end. */
+const sideMarks = new Map();
+function sideHem(img) {
+  if (!sideMarks.has(img.src)) {
+    const at = share => garmentRun(img, Math.round(share * 1000) / 1000);
+    const low = centerHem(img), body = at(low - .12);
+    let share = low - .005;
+    while (share > low - .12 && at(share) < body * .92) share -= .005;
+    sideMarks.set(img.src, share);
+  }
+  return sideMarks.get(img.src);
+}
 /* Where a top's body ends at its center, as a share of its height (the sleeves can hang lower). */
 const hemMarks = new Map();
 function centerHem(img) {
@@ -1757,13 +1813,33 @@ async function paintDummy(canvas, outfit) {
   // The neck goes back over the inside of the collar, so the form is wearing the knit.
   const neckOver = (item, box) => {
     const points = NECKS[WEAR[item.id][0]];
-    if (!points) return;
-    g.save();
-    polyPath(g, points, box);
-    g.clip();
-    g.filter = "brightness(.88)";
-    g.drawImage(dummy, MID - dummy.width / 2, 0);
-    g.restore();
+    if (points) {
+      g.save();
+      polyPath(g, points, box);
+      g.clip();
+      g.filter = "brightness(.88)";
+      g.drawImage(dummy, MID - dummy.width / 2, 0);
+      g.restore();
+      return;
+    }
+    // A top photographed with its neck opening cut out: the form shows through that
+    // opening (neck and a little chest), never the background behind it.
+    const img = garments[order.indexOf(item)], hole = neckHole(img);
+    if (!hole) return;
+    const skin = document.createElement("canvas");
+    skin.width = CANVAS_W; skin.height = CANVAS_H;
+    const k = skin.getContext("2d");
+    // Behind the neck, the inside of the collar in its own shade.
+    k.fillStyle = COLORS[item.color].hex;
+    k.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    k.fillStyle = "rgba(20, 12, 30, .45)";
+    k.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    k.filter = "brightness(.88)";
+    k.drawImage(dummy, MID - dummy.width / 2, 0);
+    k.filter = "none";
+    k.globalCompositeOperation = "destination-in";
+    k.drawImage(hole, box.x, box.y, box.width, box.height);
+    g.drawImage(skin, 0, 0);
   };
   // Sleeves cover the arms: under a coat or a long-sleeve top, hide the dummy's arms
   // from shoulder to wrist so the dummy's angled arms never show past the sleeves.
@@ -1819,7 +1895,7 @@ async function paintDummy(canvas, outfit) {
   const knit0 = topImg0 && upperBox(top, topImg0);
   const waistCap = !topImg0 ? null
     // The narrowest of a few rows just above the hem, so a sleeve hanging against the body isn't counted.
-    : !coat ? { y: knit0.y + knit0.height * centerHem(topImg0), w: Math.min(...[.015, .04, .07, .1].map(d => garmentRun(topImg0, Math.round((centerHem(topImg0) - d) * 1000) / 1000))) * knit0.width / topImg0.width * .97 }
+    : !coat ? { y: knit0.y + knit0.height * sideHem(topImg0), w: Math.min(...[.005, .03, .06, .09].map(d => garmentRun(topImg0, Math.round((sideHem(topImg0) - d) * 1000) / 1000))) * knit0.width / topImg0.width * .97 }
     : WAIST_JACKETS.includes(coat.id) ? { y: coatBox.y + coatBox.height * (hemShare(WEAR[coat.id][0]) - .03), w: garmentBody(coatImg, hemShare(WEAR[coat.id][0]) - .03) * coatBox.width / coatImg.width * .97 }
     : null;
   order.forEach((item, i) => {
@@ -1846,7 +1922,7 @@ async function paintDummy(canvas, outfit) {
         const knit = upperBox(top, topImg);
         // Under a cropped jacket they start where its opening ends, so the tucked knit
         // overlaps the waistband with no gap between them.
-        const cover = coat && WAIST_JACKETS.includes(coat.id) ? coatBox.y + coatBox.height * (hemShare(WEAR[coat.id][0]) - .03) : knit.y + knit.height * centerHem(topImg);
+        const cover = coat && WAIST_JACKETS.includes(coat.id) ? coatBox.y + coatBox.height * (hemShare(WEAR[coat.id][0]) - .03) : knit.y + knit.height * sideHem(topImg);
         g.save();
         g.beginPath();
         g.rect(0, cover - 2, CANVAS_W, CANVAS_H);
