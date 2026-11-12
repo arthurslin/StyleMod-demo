@@ -75,6 +75,7 @@
     border: 1px solid var(--line-strong); background: transparent; color: var(--ink);
     cursor: pointer; transition: background .15s, border-color .15s, color .15s;
   }
+  a.btn { text-decoration: none; }
   .btn:hover { background: var(--sunken); }
   .btn.primary { background: linear-gradient(90deg, var(--violet), var(--electric)); border-color: transparent; color: #fff; font-weight: 600; }
   .btn.primary:hover { filter: brightness(1.15); }
@@ -264,9 +265,67 @@
   .suggested { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 24px; }
   .match-note { display: inline-block; margin-top: 6px; font-size: .875rem; color: var(--soft-ink); }
   .match-note b { color: var(--accent); }
+
+  /* Header link to the case study: gradient ring, glow and a pulsing dot so it stands out
+     without copying the solid "Start the quiz" button */
+  .cs-link {
+    --ring: linear-gradient(90deg, #a24bff, #4f7dff, #7d95ff);
+    border: 2px solid transparent; font-weight: 600; color: var(--ink);
+    background: linear-gradient(var(--accent-soft), var(--accent-soft)) padding-box, var(--ring) border-box;
+    box-shadow: 0 0 0 1px rgba(162, 75, 255, .25), 0 0 22px rgba(123, 0, 255, .6), 0 0 44px rgba(0, 42, 255, .35);
+  }
+  .cs-link:hover { background: linear-gradient(var(--sunken), var(--sunken)) padding-box, var(--ring) border-box; box-shadow: 0 0 0 1px rgba(162, 75, 255, .4), 0 0 28px rgba(123, 0, 255, .8), 0 0 56px rgba(0, 42, 255, .5); }
+  :root[data-theme="light"] .cs-link { --ring: linear-gradient(90deg, var(--violet), var(--electric)); box-shadow: 0 0 16px rgba(123, 0, 255, .3); }
+  .cs-dot { position: relative; width: 8px; height: 8px; border-radius: 50%; background: #b46bff; flex: none; }
+  .cs-dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: #b46bff; animation: cs-pulse 1.8s ease-out infinite; }
+  @keyframes cs-pulse { from { transform: scale(1); opacity: .8; } to { transform: scale(3); opacity: 0; } }
+  .cs-short { display: none; }
+  @media (max-width: 479px) { .cs-long, .cs-arrow { display: none; } .cs-short { display: inline; } }
+
+  /* Case study: static write-up below the demo, outside #app so render() never touches it */
+  .cs { margin: 64px 16px 0; scroll-margin-top: 16px; }
+  .cs-in { max-width: 1080px; margin: 0 auto; padding-top: 40px; border-top: 1px solid var(--line); }
+  .cs-head { max-width: 760px; }
+  .cs-title { font-size: clamp(1.8rem, 5vw, 2.7rem); margin-top: 10px; }
+  .cs-head .lede { font-size: 1.05rem; margin-top: 14px; }
+  .cs-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 16px; font-size: .875rem; color: var(--muted); }
+  .cs-meta b { color: var(--ink); font-weight: 600; }
+  .cs-block { margin-top: 44px; }
+  .cs-block > h3 { font-size: clamp(1.35rem, 3.4vw, 1.75rem); }
+  .cs-block > .lede { max-width: 720px; }
+  .cs-grid { display: grid; gap: 12px; margin-top: 18px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
+  .cs-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+  .cs-card h4 { font-family: var(--sans); font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+  .cs-card p { color: var(--soft-ink); font-size: .95rem; }
+  .cs-card p + p { margin-top: 8px; }
+  .cs-card .num { display: block; font-size: .78rem; letter-spacing: .09em; color: var(--accent); font-weight: 600; margin-bottom: 6px; }
+  .cs-card dl { margin: 10px 0 0; font-size: .925rem; }
+  .cs-card dt { font-size: .75rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-top: 10px; }
+  .cs-card dd { margin: 2px 0 0; color: var(--soft-ink); }
+  .stats { display: grid; gap: 12px; margin-top: 18px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
+  .stat { border: 1px solid var(--card-line); border-radius: var(--radius); padding: 16px; background: var(--surface); }
+  .stat b { display: block; font-size: clamp(2.2rem, 6vw, 2.8rem); font-weight: 300; line-height: 1.1; background: linear-gradient(90deg, var(--accent), var(--accent-dark)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .stat span { display: block; margin-top: 4px; color: var(--muted); font-size: .925rem; }
+  .verdict { display: inline-block; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; padding: 3px 9px; border-radius: 999px; margin-bottom: 8px; border: 1px solid var(--line-strong); color: var(--ink); }
+  .verdict.go { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-dark); }
+  .map { list-style: none; margin: 18px 0 0; padding: 0; border-top: 1px solid var(--line); }
+  .map li { display: grid; gap: 4px 24px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .map b { font-weight: 600; }
+  .map span { color: var(--soft-ink); font-size: .95rem; }
+  .faq { margin-top: 18px; border-top: 1px solid var(--line); }
+  .faq details { border-bottom: 1px solid var(--line); padding: 12px 0; margin: 0; }
+  .faq summary { color: var(--ink); font-weight: 600; min-height: 24px; }
+  .faq details p { margin-top: 8px; color: var(--soft-ink); max-width: 720px; }
+  .cs-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-top: 44px; padding: 20px; border-radius: 14px; border: 1px solid var(--card-line); background: var(--surface); }
+  .cs-cta p { flex: 1 1 260px; }
+  @media (min-width: 720px) {
+    .map li { grid-template-columns: minmax(200px, 1fr) 2fr; }
+  }
   @media (max-width: 479px) {
     .tag { display: none; }
     .brand { font-size: 1.1rem; white-space: nowrap; }
+    .head-right { gap: 6px; }
+    .head-right .btn.small { white-space: nowrap; padding: 5px 10px; font-size: .8rem; }
   }
   @media (min-width: 560px) and (max-width: 879px) {
     .visual { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: start; }
@@ -294,12 +353,131 @@
     <a class="brand" href="./" data-action="home" aria-label="StyleMod, Styled By You. Start the quiz again">StyleMod,<small>Styled By You</small></a>
     <div class="head-right">
       <div class="tag">Concept mockup, placeholder data</div>
+      <a class="btn small cs-link" href="#case-study"><i class="cs-dot" aria-hidden="true"></i><span class="cs-long">Read the case study</span><span class="cs-short">Case study</span><span class="cs-arrow" aria-hidden="true"> ↓</span></a>
       <button class="btn small" id="themeBtn" data-action="theme">Dark mode</button>
     </div>
   </div>
 </header>
 
 <main id="app"></main>
+
+<section class="cs" id="case-study" aria-labelledby="cs-title">
+  <div class="cs-in">
+    <header class="cs-head">
+      <p class="eyebrow">Case study · Generative AI in marketing</p>
+      <h2 class="cs-title" id="cs-title">Personalization drove results, but targeting without guardrails put customer trust at risk</h2>
+      <p class="lede">StyleMod, a fashion retailer with about 4 million email subscribers, piloted generative AI to personalize its marketing. The numbers went up, and so did the complaints. Our group looked at where the AI created value, where it destroyed value, and how to keep the gains without the guesswork. The demo above is a working prototype of our recommendation: personalize <em>with</em> customers, not about them.</p>
+      <div class="cs-meta">
+        <span><b>Format</b> Group case presentation</span>
+        <span><b>Deliverables</b> Analysis, recommendation, interactive prototype</span>
+        <span><b>Prototype</b> HTML, CSS and JavaScript, runs in the browser</span>
+      </div>
+    </header>
+
+    <div class="cs-block">
+      <p class="eyebrow">Value created</p>
+      <h3>The pilot worked on results</h3>
+      <div class="stats">
+        <div class="stat"><b>2×</b><span>Email opens</span></div>
+        <div class="stat"><b>+40%</b><span>Click-through rate</span></div>
+        <div class="stat"><b>$2M</b><span>Incremental revenue, about 10% growth</span></div>
+      </div>
+      <div class="cs-grid">
+        <div class="cs-card"><h4>More relevant messaging</h4><p>When each customer gets a message tailored to them, engagement goes up, and tailored messaging leads to higher retention.</p></div>
+        <div class="cs-card"><h4>Customer relationships protected</h4><p>The model withheld discounts from people who would have bought anyway, so StyleMod wasn't giving away margin or training customers to wait for deals.</p></div>
+        <div class="cs-card"><h4>Lower costs</h4><p>Training an internal model meant less effort spent writing copy by hand.</p></div>
+      </div>
+    </div>
+
+    <div class="cs-block">
+      <p class="eyebrow">Threats to value</p>
+      <h3>The same personalization broke trust</h3>
+      <p class="lede">The complaints were few next to 4 million subscribers, but they went viral, and StyleMod's brand depends on trust and inclusivity. One message like these can do more damage than any gain in click-through.</p>
+      <div class="cs-grid">
+        <div class="cs-card">
+          <span class="num">01</span>
+          <h4>Customer privacy</h4>
+          <dl>
+            <dt>What happened</dt><dd>A male customer got stiletto promotions. The system combined his purchase history with third-party clickstream data and weighted recent browsing over what he actually bought.</dd>
+            <dt>Safeguard</dt><dd>Prioritize first-party purchase history and drop third-party data.</dd>
+          </dl>
+        </div>
+        <div class="cs-card">
+          <span class="num">02</span>
+          <h4>Trust and inclusivity</h4>
+          <dl>
+            <dt>What happened</dt><dd>Maternity wear was emailed to a woman who had miscarried.</dd>
+            <dt>Safeguard</dt><dd>Block inferences about sensitive topics such as pregnancy, health and loss.</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <div class="cs-block">
+      <p class="eyebrow">Recommendation</p>
+      <h3>Keep the AI, add guardrails, and let customers say what they want</h3>
+      <p class="lede">A better algorithm still guesses. Letting customers state their preferences removes the guessing. We'd keep the system with three guardrails, and add a short, optional style quiz backed by first-party behavior, so customers who skip it still get relevant messages.</p>
+      <div class="cs-grid">
+        <div class="cs-card"><span class="num">01</span><h4>No third-party data</h4><p>Personalize from what customers buy and tell us, not from their browsing elsewhere.</p></div>
+        <div class="cs-card"><span class="num">02</span><h4>Sensitive-topic block</h4><p>A hard rule against inferring pregnancy, health or loss, whatever the model predicts.</p></div>
+        <div class="cs-card"><span class="num">03</span><h4>Easy opt-out</h4><p>Customers choose what to share, and can edit or delete it at any time.</p></div>
+      </div>
+    </div>
+
+    <div class="cs-block">
+      <p class="eyebrow">The CFO's expansion plan</p>
+      <h3>Scale the low-risk uses first</h3>
+      <div class="cs-grid">
+        <div class="cs-card"><span class="verdict go">Expand</span><h4>Product recommendations</h4><p>Built on first-party data and low risk.</p></div>
+        <div class="cs-card"><span class="verdict go">Expand</span><h4>Media buying</h4><p>Lower risk when the AI works within human-set spending limits and safety rules.</p></div>
+        <div class="cs-card"><span class="verdict">Pilot</span><h4>Chatbot</h4><p>Chatbots talk directly to customers, so start with narrow tasks like FAQs and order tracking, and route sensitive topics to a person.</p></div>
+        <div class="cs-card"><span class="verdict">Hold</span><h4>Dynamic pricing</h4><p>Personalized prices could make customers feel they're being treated unfairly.</p></div>
+      </div>
+    </div>
+
+    <div class="cs-block">
+      <p class="eyebrow">From slides to prototype</p>
+      <h3>How the demo puts the recommendation into practice</h3>
+      <p class="lede">We built the demo to show the recommendation working rather than just describing it. A rules-based engine stands in for the model, and comments in the source mark where a real generative model would plug in.</p>
+      <ul class="map">
+        <li><b>Stated, not inferred</b><span>Five questions drive every recommendation. Gender sets the section and dummy only because the customer chose it, and the quiz says so.</span></li>
+        <li><b>No third-party data</b><span>The "How we personalize" panel shows exactly which answers are in use. Nothing comes from browsing on other sites.</span></li>
+        <li><b>Sensitive-topic block</b><span>The quiz never asks about, or guesses at, life events or health.</span></li>
+        <li><b>Easy opt-out</b><span>Customers can turn personalization off on the results page, or clear all their data in one step. Everything lives in the browser tab and disappears when it closes.</span></li>
+        <li><b>Explain the pick</b><span>Each outfit says why it was chosen, and every piece can be swapped, hidden or reshuffled.</span></li>
+        <li><b>Learn from feedback</b><span>"What wasn't right?" adjusts the next picks for that session, so the customer corrects the system instead of the system guessing.</span></li>
+      </ul>
+    </div>
+
+    <div class="cs-block">
+      <p class="eyebrow">People and measurement</p>
+      <h3>What changes, and how we'd know it's working</h3>
+      <div class="cs-grid">
+        <div class="cs-card"><h4>Copywriters</h4><p>Their role shifts to training the AI, polishing high-profile campaigns and refining the brand voice, work that still needs human judgment.</p></div>
+        <div class="cs-card"><h4>Cost</h4><p>The plan still saves on copywriting and scales the low-risk uses, while avoiding the cost of lost trust.</p></div>
+        <div class="cs-card"><h4>Net results</h4><p>Track engagement and conversion alongside unsubscribes, complaints and repeat purchases, with a holdout group that gets no AI messaging to confirm the lift.</p></div>
+      </div>
+    </div>
+
+    <div class="cs-block">
+      <p class="eyebrow">Q&amp;A</p>
+      <h3>Questions we prepared for</h3>
+      <div class="faq">
+        <details><summary>Is the pilot a success or a failure?</summary><p>A success on results, with a real trust risk that needs fixing.</p></details>
+        <details><summary>How do you know the AI caused the lift?</summary><p>The results are consistent with the AI driving it, and we'd confirm with a holdout group that doesn't get AI messaging.</p></details>
+        <details><summary>Why not just fix the algorithm?</summary><p>A better algorithm still guesses. Letting customers state their preferences removes the guessing.</p></details>
+        <details><summary>Would people actually take the style quiz?</summary><p>Most won't, so we'd keep it short and optional, and first-party behavior would fill the gaps. That way low participation doesn't erase the gains.</p></details>
+        <details><summary>Isn't "personalize with them" just collecting more data?</summary><p>It's different because customers choose what to share and can edit or delete it.</p></details>
+        <details><summary>Do customers care about privacy if they get a good deal?</summary><p>Some don't, but the complaints show others do, and lost trust is hard to rebuild.</p></details>
+      </div>
+    </div>
+
+    <div class="cs-cta">
+      <p><b>See it for yourself.</b> Answer five questions and get three outfits built only from what you chose.</p>
+      <a class="btn primary" href="#app">Try the demo</a>
+    </div>
+  </div>
+</section>
 
 <footer class="site-foot">
   <div class="site-foot-in">
